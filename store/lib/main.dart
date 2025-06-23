@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:store/screen/cart_page_product.dart';
 import 'package:store/screen/home_page.dart';
 import 'package:store/screen/updata_product_page.dart';
 
@@ -16,6 +17,7 @@ class Store extends StatelessWidget {
       routes: {
         HomePage.id: (context) => const HomePage(),
         UpdataProductPage.id: (context) => UpdataProductPage(),
+        'cartPage': (context) => const CartPage(),
       },
       initialRoute: HomePage.id,
     );
