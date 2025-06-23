@@ -7,6 +7,7 @@ class Product_model {
   final double? price;
   final String? imageUrl;
   final rating_model? rating;
+
   Product_model({
     required this.id,
     required this.title,
@@ -15,35 +16,31 @@ class Product_model {
     required this.imageUrl,
     required this.rating,
   });
-  // this method is used to convert the product object to a map
-  // which is uded to send data to the server or save it in loacal storage
+
   factory Product_model.fromJson(Map<String, dynamic> json) {
     return Product_model(
-      id: json['id'] as String,
+      id: json['id'].toString(), // ✅ هنا التعديل
       title: json['title'] as String?,
       description: json['description'] as String?,
       price: (json['price'] as num?)?.toDouble(),
       imageUrl: json['image'] as String?,
-      rating: rating_model.fromJson(
-        json['rating'] as Map<String, dynamic>? ?? {},
-      ),
+      rating: json['rating'] != null
+          ? rating_model.fromJson(json['rating'] as Map<String, dynamic>)
+          : null,
     );
   }
 }
 
-// class map rating_model is using to convert the rating object to a map
-// which is used to send data to the server or save it in local storage
 class rating_model {
-  final String? rate;
-  final String? count;
-  // Assuming you might want to include count as well
+  final double rate;
+  final int count;
 
   rating_model({required this.rate, required this.count});
 
   factory rating_model.fromJson(Map<String, dynamic> json) {
     return rating_model(
-      rate: json['rate'] as String?,
-      count: json['count'] as String?,
+      rate: (json['rate'] as num?)?.toDouble() ?? 0.0,
+      count: (json['count'] as int?) ?? 0,
     );
   }
 }
