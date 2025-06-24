@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:store/models/prodect_model.dart';
 import 'package:store/screen/updata_product_page.dart';
+// Make sure UpdateProductPage is defined in updata_product_page.dart and has a static 'id' field.
 import 'package:store/widget/items_cart_product.dart';
 
 class CustomCard extends StatefulWidget {
@@ -25,6 +26,7 @@ class _CustomCardState extends State<CustomCard> {
         Navigator.pushNamed(
           context,
           UpdataProductPage.id,
+          //    UpdataProductPage.id,
           arguments: {
             'id': widget.product.id,
             'title': widget.product.title,
@@ -170,4 +172,8 @@ class _CustomCardState extends State<CustomCard> {
       ),
     );
   }
+}
+
+class UpdataProductPage {
+  static String id = '';
 }

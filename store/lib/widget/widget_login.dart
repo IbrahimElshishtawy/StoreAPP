@@ -6,7 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:store/screen/login_page.dart';
 import 'package:store/widget/custom_btn.dart';
 import 'package:store/widget/custom_textfeld.dart';
 
@@ -165,8 +164,8 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
             ),
-            const SizedBox(height: 20),
 
+            const SizedBox(height: 20),
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(

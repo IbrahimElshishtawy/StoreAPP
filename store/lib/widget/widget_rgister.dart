@@ -126,7 +126,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     CustomTextField(
                       hintext: 'Enter your first name',
                       labeltext: 'First Name',
-                      controller: firstNameController,
+
                       obscureText: false,
                       suffixIcon: Icon(
                         Icons.check_circle,
@@ -138,7 +138,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     CustomTextField(
                       hintext: 'Enter your last name',
                       labeltext: 'Last Name',
-                      controller: lastNameController,
+
                       obscureText: false,
                       suffixIcon: Icon(
                         Icons.check_circle,
@@ -150,7 +150,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     CustomTextField(
                       hintext: 'Enter your address',
                       labeltext: 'Address',
-                      controller: addressController,
+
                       obscureText: false,
                       suffixIcon: Icon(
                         Icons.check_circle,
@@ -162,7 +162,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     CustomTextField(
                       hintext: 'Enter your email',
                       labeltext: 'Email',
-                      controller: emailController,
+
                       obscureText: false,
                       suffixIcon: Icon(
                         Icons.check_circle,
@@ -174,19 +174,19 @@ class _RegisterPageState extends State<WidgetRgister> {
                     CustomTextField(
                       hintext: 'Enter your phone number',
                       labeltext: 'Phone Number',
-                      controller: phoneController,
+
                       obscureText: false,
                       suffixIcon: Icon(
                         Icons.check_circle,
                         color: getIconColor(phoneController.text),
                       ),
                     ),
-                    const SizedBox(height: 15),
+                    SizedBox(height: 15),
 
                     CustomTextField(
                       hintext: 'Enter your password',
                       labeltext: 'Password',
-                      controller: passwordController,
+
                       obscureText: true,
                       suffixIcon: Icon(
                         Icons.check_circle,
@@ -198,7 +198,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     CustomTextField(
                       hintext: 'Confirm your password',
                       labeltext: 'Confirm Password',
-                      controller: confirmPasswordController,
+
                       obscureText: true,
                       suffixIcon: Icon(
                         Icons.check_circle,
