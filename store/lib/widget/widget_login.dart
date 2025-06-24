@@ -1,7 +1,6 @@
 // ignore_for_file: override_on_non_overriding_member, unnecessary_import, use_build_context_synchronously
 
 import 'dart:ui';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -11,15 +10,11 @@ import 'package:store/screen/login_page.dart';
 import 'package:store/widget/custom_btn.dart';
 import 'package:store/widget/custom_textfeld.dart';
 
-class WidgetLogin extends StatelessWidget {
-  const WidgetLogin({super.key});
-  @override
-  State<LoginPage> createState() => _LoginPageState();
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    throw UnimplementedError();
-  }
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
