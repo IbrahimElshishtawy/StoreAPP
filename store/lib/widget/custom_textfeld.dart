@@ -24,6 +24,7 @@ class CustomTextField extends StatelessWidget {
     this.Keyboard = TextInputType.text,
     this.onChanged,
     required TextEditingController controller,
+    required String labeltext,
   });
 
   @override

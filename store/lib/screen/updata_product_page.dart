@@ -113,13 +113,11 @@ class _UpdataProductPageState extends State<UpdataProductPage> {
                                 ),
                               ),
 
-                              /// المحتوى النصي
                               Padding(
                                 padding: const EdgeInsets.all(12),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    /// الاسم
                                     Text(
                                       nameController.text,
                                       style: const TextStyle(
@@ -169,22 +167,26 @@ class _UpdataProductPageState extends State<UpdataProductPage> {
                       CustomTextField(
                         hintext: 'Product Name',
                         controller: nameController,
+                        labeltext: 'name',
                       ),
                       const SizedBox(height: 15),
                       CustomTextField(
                         hintext: 'Product Price',
                         Keyboard: TextInputType.number,
                         controller: priceController,
+                        labeltext: 'price',
                       ),
                       const SizedBox(height: 15),
                       CustomTextField(
                         hintext: 'Product Description',
                         controller: descriptionController,
+                        labeltext: 'Decription',
                       ),
                       const SizedBox(height: 15),
                       CustomTextField(
                         hintext: 'Product Image URL',
                         controller: imageUrlController,
+                        labeltext: 'image',
                       ),
                       const SizedBox(height: 30),
 
