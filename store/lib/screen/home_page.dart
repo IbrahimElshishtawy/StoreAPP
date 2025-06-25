@@ -54,6 +54,7 @@ class _HomePageState extends State<HomePage> {
       drawer: Drawer(
         child: Column(
           children: [
+            // رأس القائمة الجانبية
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -64,9 +65,7 @@ class _HomePageState extends State<HomePage> {
               ),
               currentAccountPicture: const CircleAvatar(
                 radius: 30,
-                backgroundImage: AssetImage(
-                  'assets/image/images.png',
-                ), // ← غيّر حسب صورتك
+                backgroundImage: AssetImage('assets/image/images.png'),
               ),
               accountName: Text(
                 userData != null
@@ -81,6 +80,8 @@ class _HomePageState extends State<HomePage> {
                 userData != null ? userData!["email"] : 'Welcome!',
               ),
             ),
+
+            // عناصر القائمة الجانبية
             Expanded(
               child: ListView(
                 children: [
@@ -90,7 +91,7 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.blue,
                     ),
                     title: const Text('Profile'),
-                    onTap: () async {
+                    onTap: () {
                       Navigator.pop(context);
                       if (userData != null) {
                         final userProfile = UserProfile(
@@ -151,6 +152,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -164,7 +166,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+
       body: pages[currentIndex],
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (index) => setState(() => currentIndex = index),

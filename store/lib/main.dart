@@ -29,7 +29,7 @@ class Store extends StatelessWidget {
         '/home': (context) => const HomePage(),
 
         '/upload': (context) => const UploadProductPage(),
-        '/orders': (context) => const MyProductsPage(), // ✅ لازم تضيف ده
+        '/orders': (context) => const MyProductsPage(),
       },
     );
   }

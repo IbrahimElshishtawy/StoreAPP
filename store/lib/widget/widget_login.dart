@@ -1,5 +1,4 @@
-// ignore_for_file: curly_braces_in_flow_control_structures
-
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -21,19 +20,42 @@ class _WidgetLoginState extends State<WidgetLogin> {
 
   bool isPasswordVisible = false;
   bool isLoading = false;
+  bool isEmailValid = false;
+  Timer? debounceTimer;
 
   @override
   void initState() {
     super.initState();
+    emailController.addListener(validateEmailDebounced);
     loadSavedLogin();
+  }
+
+  @override
+  void dispose() {
+    emailController.removeListener(validateEmailDebounced);
+    emailController.dispose();
+    passwordController.dispose();
+    debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void validateEmailDebounced() {
+    if (debounceTimer?.isActive ?? false) debounceTimer!.cancel();
+    debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      final email = emailController.text.trim();
+      final valid = RegExp(r'^[\w-\.]+@gmail\.com$').hasMatch(email);
+      if (isEmailValid != valid) {
+        setState(() {
+          isEmailValid = valid;
+        });
+      }
+    });
   }
 
   Future<void> loadSavedLogin() async {
     final prefs = await SharedPreferences.getInstance();
     emailController.text = prefs.getString('saved_email') ?? '';
     passwordController.text = prefs.getString('saved_password') ?? '';
-    // ignore: avoid_print
-    print("📦 Loaded saved email: ${emailController.text}");
   }
 
   Future<void> loginUser() async {
@@ -46,8 +68,6 @@ class _WidgetLoginState extends State<WidgetLogin> {
     }
 
     setState(() => isLoading = true);
-    // ignore: avoid_print
-    print("🔐 Attempting login for $email");
 
     try {
       final authResult = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -58,9 +78,6 @@ class _WidgetLoginState extends State<WidgetLogin> {
       final user = authResult.user;
       if (user == null) throw Exception("User is null after sign in");
 
-      // ignore: avoid_print
-      print("✅ Logged in. UID: ${user.uid}");
-
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -68,44 +85,28 @@ class _WidgetLoginState extends State<WidgetLogin> {
 
       if (!doc.exists || doc.data() == null) {
         await FirebaseAuth.instance.signOut();
-        // ignore: avoid_print
-        print("❌ Firestore document not found for UID: ${user.uid}");
-        showMessage('User data not found in Firestore');
+        showMessage('User data not found');
         return;
-      }
-
-      if (kDebugMode) {
-        print("📄 Firestore data: ${doc.data()}");
       }
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('saved_email', email);
       await prefs.setString('saved_password', password);
-      if (kDebugMode) {
-        print("💾 Saved credentials locally");
-      }
 
       if (!mounted) return;
 
       Navigator.pushReplacementNamed(context, '/home', arguments: doc.data());
     } on FirebaseAuthException catch (e) {
-      String msg = 'Login failed';
-      if (e.code == 'user-not-found')
-        msg = 'Email not registered';
-      else if (e.code == 'wrong-password')
-        msg = 'Incorrect password';
-      else if (e.code == 'too-many-requests')
-        msg = 'Too many login attempts. Try again later.';
-      else
-        msg = e.message ?? msg;
+      String msg = switch (e.code) {
+        'user-not-found' => 'Email is not registered',
+        'wrong-password' => 'Incorrect password',
+        'too-many-requests' => 'Too many login attempts. Try again later.',
+        _ => e.message ?? 'Login failed',
+      };
 
-      // ignore: avoid_print
-      print("⚠ FirebaseAuthException: ${e.code} → $msg");
       showMessage(msg);
     } catch (e) {
-      // ignore: avoid_print
-      print("❗ Unexpected error: $e");
-      showMessage('Unexpected error: $e');
+      showMessage('Unexpected error occurred');
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -118,8 +119,6 @@ class _WidgetLoginState extends State<WidgetLogin> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final emailText = emailController.text.trim();
-    final isEmailValid = RegExp(r'^[\w-\.]+@gmail\.com$').hasMatch(emailText);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40),
@@ -148,7 +147,7 @@ class _WidgetLoginState extends State<WidgetLogin> {
             hintext: 'Enter your email',
             labeltext: 'Email',
             obscureText: false,
-            suffixIcon: emailText.isEmpty
+            suffixIcon: emailController.text.trim().isEmpty
                 ? const Icon(Icons.email_outlined, color: Colors.grey)
                 : Icon(
                     isEmailValid ? Icons.check_circle : Icons.cancel,
