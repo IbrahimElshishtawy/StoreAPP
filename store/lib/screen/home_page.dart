@@ -57,7 +57,7 @@ class _HomePageState extends State<HomePage> {
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF0D47A1), Color(0xFF42A5F5)],
+                  colors: [Colors.lightGreenAccent, Color(0xFF42A5F5)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -85,7 +85,7 @@ class _HomePageState extends State<HomePage> {
                   ListTile(
                     leading: const Icon(
                       Icons.person_outline,
-                      color: Colors.blue,
+                      color: Colors.teal,
                     ),
                     title: const Text('Profile'),
                     onTap: () {

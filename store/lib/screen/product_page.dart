@@ -32,7 +32,12 @@ class ProductsPage extends StatelessWidget {
           ),
           itemCount: products.length,
           itemBuilder: (context, index) {
-            return CustomCard(product: products[index]);
+            return CustomCard(
+              product: products[index],
+              title: '',
+              price: '',
+              image: '',
+            );
           },
         );
       },

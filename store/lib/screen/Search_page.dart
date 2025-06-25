@@ -82,7 +82,12 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                   itemCount: _filteredProducts.length,
                   itemBuilder: (context, index) {
-                    return CustomCard(product: _filteredProducts[index]);
+                    return CustomCard(
+                      product: _filteredProducts[index],
+                      title: '',
+                      price: '',
+                      image: '',
+                    );
                   },
                 ),
         ),

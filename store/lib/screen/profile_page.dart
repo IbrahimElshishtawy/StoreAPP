@@ -18,51 +18,61 @@ class ProfilePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F9FC),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF0D47A1),
-        centerTitle: true,
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: AppBar(
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.lightGreenAccent, Color(0xFF42A5F5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
-            tooltip: 'Edit Profile',
-            onPressed: () async {
-              final result = await Navigator.pushNamed(
-                context,
-                '/editProfile',
-                arguments: user,
-              );
-
-              if (result != null && result is Map) {
-                Navigator.pushReplacement(
+          centerTitle: true,
+          title: const Text(
+            'Profile',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.white),
+              tooltip: 'Edit Profile',
+              onPressed: () async {
+                final result = await Navigator.pushNamed(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => ProfilePage(
-                      user: UserProfile(
-                        id: user.id,
-                        firstName: result['firstName'] ?? user.firstName,
-                        lastName: result['lastName'] ?? user.lastName,
-                        email: result['email'] ?? user.email,
-                        phone: result['phone'] ?? user.phone,
-                        address: result['address'] ?? user.address,
-                        password: result['password'] ?? user.password,
+                  '/editProfile',
+                  arguments: user,
+                );
+
+                if (result != null && result is Map) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProfilePage(
+                        user: UserProfile(
+                          id: user.id,
+                          firstName: result['firstName'] ?? user.firstName,
+                          lastName: result['lastName'] ?? user.lastName,
+                          email: result['email'] ?? user.email,
+                          phone: result['phone'] ?? user.phone,
+                          address: result['address'] ?? user.address,
+                          password: result['password'] ?? user.password,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }
-            },
-          ),
-        ],
+                  );
+                }
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
