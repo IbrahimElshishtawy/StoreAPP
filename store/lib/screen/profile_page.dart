@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:store/models/customs_userid.dart'; // يحتوي على كلاس UserProfile
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key, required UserProfile user});
-
+  const ProfilePage({super.key, required this.user});
+  final UserProfile user;
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments;

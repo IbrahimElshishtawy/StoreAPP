@@ -1,35 +1,37 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: use_super_parameters
 
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
+  final TextEditingController controller;
   final String hintext;
   final String labeltext;
   final bool obscureText;
-  final void Function(String)? onChanged;
   final Widget? suffixIcon;
-  final TextInputType? keyboardType;
-  final TextEditingController? controller;
+
   const CustomTextField({
-    super.key,
+    Key? key,
+    required this.controller,
     required this.hintext,
     required this.labeltext,
     required this.obscureText,
-    this.onChanged,
     this.suffixIcon,
-    this.keyboardType,
-    this.controller,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      keyboardType: keyboardType,
+    return TextFormField(
+      controller: controller, // ✅ أهم شيء
       obscureText: obscureText,
-      onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Required';
+        }
+        return null;
+      },
       decoration: InputDecoration(
-        labelText: labeltext,
         hintText: hintext,
+        labelText: labeltext,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),

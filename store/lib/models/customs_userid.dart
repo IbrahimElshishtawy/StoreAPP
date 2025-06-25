@@ -16,4 +16,16 @@ class UserProfile {
     required this.email,
     required this.phone,
   });
+
+  /// ⬅️ تحويل بيانات Firestore إلى UserProfile
+  factory UserProfile.fromMap(Map<String, dynamic> data, String documentId) {
+    return UserProfile(
+      id: documentId,
+      firstName: data['firstName'] ?? '',
+      lastName: data['lastName'] ?? '',
+      address: data['address'] ?? '',
+      email: data['email'] ?? '',
+      phone: data['phone'] ?? '',
+    );
+  }
 }

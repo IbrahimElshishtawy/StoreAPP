@@ -13,6 +13,9 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(backgroundColor: Colors.white, body: LoginPage());
+    return const Scaffold(
+      backgroundColor: Colors.white,
+      body: WidgetLogin(), // نموذج تسجيل الدخول المخصص
+    );
   }
 }

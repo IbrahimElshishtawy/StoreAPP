@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:store/models/prodect_model.dart';
-import 'package:store/screen/updata_product_page.dart';
+import 'package:store/screen/data_product_page.dart';
 // Make sure UpdateProductPage is defined in updata_product_page.dart and has a static 'id' field.
 import 'package:store/widget/items_cart_product.dart';
 
@@ -22,20 +22,20 @@ class _CustomCardState extends State<CustomCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          UpdataProductPage.id,
-          //    UpdataProductPage.id,
-          arguments: {
-            'id': widget.product.id,
-            'title': widget.product.title,
-            'price': widget.product.price.toString(),
-            'description': widget.product.description,
-            'image': widget.product.imageUrl,
-          },
-        );
-      },
+      // onTap: () {
+      //   Navigator.pushNamed(
+      //     context,
+      //     UpdataProductPage.id,
+      //     //   UpdataProductPage.id,
+      //     arguments: {
+      //       'id': widget.product.id,
+      //       'title': widget.product.title,
+      //       'price': widget.product.price.toString(),
+      //       'description': widget.product.description,
+      //       'image': widget.product.imageUrl,
+      //     },
+      //   );
+      // },
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.topRight,
