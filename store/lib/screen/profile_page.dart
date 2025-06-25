@@ -54,6 +54,7 @@ class ProfilePage extends StatelessWidget {
                         email: result['email'] ?? user.email,
                         phone: result['phone'] ?? user.phone,
                         address: result['address'] ?? user.address,
+                        password: result['password'] ?? user.password,
                       ),
                     ),
                   ),
@@ -113,7 +114,10 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(color: Colors.black54, fontSize: 14),
+                    style: const TextStyle(
+                      color: Color.fromARGB(137, 250, 248, 248),
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(

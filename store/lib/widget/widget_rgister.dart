@@ -1,8 +1,7 @@
-// ignore_for_file: override_on_non_overriding_member, use_build_context_synchronously, sized_box_for_whitespace, avoid_print, unnecessary_import
+// ignore_for_file: override_on_non_overriding_member, use_build_context_synchronously, sized_box_for_whitespace, avoid_print
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:store/widget/custom_btn.dart';
 import 'package:store/widget/custom_textfeld.dart';
@@ -25,6 +24,10 @@ class _RegisterPageState extends State<WidgetRgister> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
+  bool showPassword = false;
+  bool showConfirmPassword = false;
+  bool isPasswordMatch = true;
+
   late final List<TextEditingController> controllers = [
     firstNameController,
     lastNameController,
@@ -40,12 +43,24 @@ class _RegisterPageState extends State<WidgetRgister> {
   @override
   void initState() {
     super.initState();
+
     _listener = () {
       if (mounted) setState(() {});
     };
+
     for (var controller in controllers) {
       controller.addListener(_listener);
     }
+
+    confirmPasswordController.addListener(checkPasswordMatch);
+    passwordController.addListener(checkPasswordMatch);
+  }
+
+  void checkPasswordMatch() {
+    setState(() {
+      isPasswordMatch =
+          passwordController.text == confirmPasswordController.text;
+    });
   }
 
   @override
@@ -57,8 +72,10 @@ class _RegisterPageState extends State<WidgetRgister> {
     super.dispose();
   }
 
-  void hideLoading(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).pop();
+  void showSnack(String message, {Color? backgroundColor}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: backgroundColor),
+    );
   }
 
   void showLoading(BuildContext context) {
@@ -69,16 +86,12 @@ class _RegisterPageState extends State<WidgetRgister> {
     );
   }
 
-  void showSnack(String message, {Color? backgroundColor}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: backgroundColor),
-    );
+  void hideLoading(BuildContext context) {
+    Navigator.of(context, rootNavigator: true).pop();
   }
 
   Color getIconColor(String text) {
-    return text.trim().isEmpty
-        ? const Color.fromARGB(255, 150, 150, 150)
-        : Colors.green;
+    return text.trim().isEmpty ? Colors.grey : Colors.green;
   }
 
   @override
@@ -98,7 +111,6 @@ class _RegisterPageState extends State<WidgetRgister> {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
                       Icons.person_add_alt_1,
@@ -115,6 +127,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     ),
                     const SizedBox(height: 20),
 
+                    // frist name
                     CustomTextField(
                       controller: firstNameController,
                       hintext: 'Enter your first name',
@@ -127,6 +140,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     ),
                     const SizedBox(height: 15),
 
+                    // last name
                     CustomTextField(
                       controller: lastNameController,
                       hintext: 'Enter your last name',
@@ -139,6 +153,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     ),
                     const SizedBox(height: 15),
 
+                    // address
                     CustomTextField(
                       controller: addressController,
                       hintext: 'Enter your address',
@@ -151,6 +166,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     ),
                     const SizedBox(height: 15),
 
+                    // Email
                     CustomTextField(
                       controller: emailController,
                       hintext: 'Enter your email',
@@ -163,6 +179,7 @@ class _RegisterPageState extends State<WidgetRgister> {
                     ),
                     const SizedBox(height: 15),
 
+                    // phone number
                     CustomTextField(
                       controller: phoneController,
                       hintext: 'Enter your phone number',
@@ -175,30 +192,48 @@ class _RegisterPageState extends State<WidgetRgister> {
                     ),
                     const SizedBox(height: 15),
 
+                    // password
                     CustomTextField(
                       controller: passwordController,
                       hintext: 'Enter your password',
                       labeltext: 'Password',
-                      obscureText: true,
-                      suffixIcon: Icon(
-                        Icons.check_circle,
-                        color: getIconColor(passwordController.text),
+                      obscureText: !showPassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          showPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: getIconColor(passwordController.text),
+                        ),
+                        onPressed: () =>
+                            setState(() => showPassword = !showPassword),
                       ),
                     ),
                     const SizedBox(height: 15),
 
+                    // confirm password
                     CustomTextField(
                       controller: confirmPasswordController,
                       hintext: 'Confirm your password',
                       labeltext: 'Confirm Password',
-                      obscureText: true,
-                      suffixIcon: Icon(
-                        Icons.check_circle,
-                        color: getIconColor(confirmPasswordController.text),
+                      obscureText: !showConfirmPassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          showConfirmPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: isPasswordMatch
+                              ? Colors.green
+                              : Colors.redAccent,
+                        ),
+                        onPressed: () => setState(
+                          () => showConfirmPassword = !showConfirmPassword,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 25),
 
+                    // Register
                     CustomBtn(
                       textbtn: 'Register',
                       onPressed: (Map<String, dynamic> data) async {
@@ -208,23 +243,6 @@ class _RegisterPageState extends State<WidgetRgister> {
                         final password = passwordController.text.trim();
                         final confirmPassword = confirmPasswordController.text
                             .trim();
-                        final firstName = firstNameController.text.trim();
-                        final lastName = lastNameController.text.trim();
-                        final address = addressController.text.trim();
-                        final phone = phoneController.text.trim();
-
-                        if ([
-                          email,
-                          password,
-                          confirmPassword,
-                          firstName,
-                          lastName,
-                          address,
-                          phone,
-                        ].any((e) => e.isEmpty)) {
-                          showSnack('Please fill all fields');
-                          return;
-                        }
 
                         if (password != confirmPassword) {
                           showSnack('Passwords do not match');
@@ -247,43 +265,33 @@ class _RegisterPageState extends State<WidgetRgister> {
                               .doc(uid)
                               .set({
                                 'uid': uid,
-                                'firstName': firstName,
-                                'lastName': lastName,
+                                'firstName': firstNameController.text.trim(),
+                                'lastName': lastNameController.text.trim(),
                                 'email': email,
-                                'phone': phone,
-                                'address': address,
+                                'phone': phoneController.text.trim(),
+                                'address': addressController.text.trim(),
                                 'createdAt': Timestamp.now(),
                               });
 
-                          print('✅ بيانات المستخدم تم إرسالها إلى Firestore');
-                          print('First Name: $firstName');
-                          print('Last Name: $lastName');
-                          print('Email: $email');
-                          print('Phone: $phone');
-                          print('Address: $address');
-                          print('UID: $uid');
-
-                          if (!mounted) return;
                           hideLoading(context);
                           showSnack(
-                            'Registration successful!',
+                            "Registration successful",
                             backgroundColor: Colors.green,
                           );
 
-                          // الانتقال إلى صفحة HomePage بعد التسجيل
                           Navigator.pushReplacementNamed(
                             context,
-                            '/home', // تأكد أن هذا هو اسم الـ route في main.dart
+                            '/home',
                             arguments: {
                               'uid': uid,
-                              'firstName': firstName,
-                              'lastName': lastName,
+                              'firstName': firstNameController.text.trim(),
+                              'lastName': lastNameController.text.trim(),
                               'email': email,
-                              'phone': phone,
-                              'address': address,
+                              'phone': phoneController.text.trim(),
+                              'address': addressController.text.trim(),
                             },
                           );
-                          print('🔥🔥🔥 تم الحفظ في Firestore');
+
                           if (mounted) {
                             for (var controller in controllers) {
                               controller.clear();
@@ -291,18 +299,12 @@ class _RegisterPageState extends State<WidgetRgister> {
                           }
                         } on FirebaseAuthException catch (e) {
                           hideLoading(context);
-                          String message = 'Registration failed';
-                          if (e.code == 'email-already-in-use') {
-                            message = 'This email is already in use.';
-                          } else if (e.code == 'weak-password') {
-                            message = 'Password is too weak.';
-                          } else if (e.code == 'invalid-email') {
-                            message = 'Invalid email format.';
-                          }
-                          showSnack(message);
-                        } catch (e) {
-                          hideLoading(context);
-                          showSnack('An error occurred. Please try again.');
+                          showSnack(
+                            e.code == 'email-already-in-use'
+                                ? 'Email already in use'
+                                : 'Registration error: ${e.message}',
+                            backgroundColor: Colors.red,
+                          );
                         }
                       },
                       data: {},

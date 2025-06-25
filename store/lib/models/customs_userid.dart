@@ -7,6 +7,7 @@ class UserProfile {
   final String address;
   final String email;
   final String phone;
+  final String? password;
 
   UserProfile({
     required this.id,
@@ -15,9 +16,9 @@ class UserProfile {
     required this.address,
     required this.email,
     required this.phone,
+    this.password,
   });
 
-  /// ⬅️ تحويل بيانات Firestore إلى UserProfile
   factory UserProfile.fromMap(Map<String, dynamic> data, String documentId) {
     return UserProfile(
       id: documentId,
@@ -26,6 +27,7 @@ class UserProfile {
       address: data['address'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
+      password: data['password'] ?? '',
     );
   }
 }
