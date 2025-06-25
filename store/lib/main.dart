@@ -8,6 +8,7 @@ import 'package:store/screen/my_products_page.dart';
 import 'package:store/screen/profile_page.dart';
 import 'package:store/screen/rgister_page.dart';
 import 'package:store/screen/upload_product_page.dart';
+import 'package:store/screen/edit_profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,9 +28,15 @@ class Store extends StatelessWidget {
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
         '/home': (context) => const HomePage(),
-
         '/upload': (context) => const UploadProductPage(),
         '/orders': (context) => const MyProductsPage(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/editProfile') {
+          final user = settings.arguments as UserProfile;
+          return MaterialPageRoute(builder: (_) => EditProfilePage(user: user));
+        }
+        return null; // fallback لو المسار مش معروف
       },
     );
   }

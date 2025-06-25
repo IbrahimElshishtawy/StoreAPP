@@ -1,116 +1,95 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
-import 'package:store/models/customs_userid.dart'; // يحتوي على كلاس UserProfile
+import 'package:store/models/customs_userid.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key, required this.user});
   final UserProfile user;
+
+  const ProfilePage({super.key, required this.user});
+
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments;
-
-    if (args == null || args is! UserProfile) {
-      if (kDebugMode) {
-        print("❌ No user data provided to ProfilePage.");
-      }
-      return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: const Center(child: Text('No user data found.')),
-      );
-    }
-
-    final user = args;
-
     if (kDebugMode) {
       print("🧾 ProfilePage opened");
       print("👤 User Data: ${user.firstName} ${user.lastName}");
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEFF3F6),
+      backgroundColor: const Color(0xFFF6F9FC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2C688E),
+        elevation: 0,
+        backgroundColor: const Color(0xFF0D47A1),
+        centerTitle: true,
         title: const Text(
-          'User Profile',
+          'Profile',
           style: TextStyle(
+            color: Colors.white,
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            letterSpacing: 0.5,
           ),
         ),
-        centerTitle: true,
-        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.white),
+            tooltip: 'Edit Profile',
+            onPressed: () async {
+              final result = await Navigator.pushNamed(
+                context,
+                '/editProfile',
+                arguments: user,
+              );
+
+              if (result != null && result is Map) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfilePage(
+                      user: UserProfile(
+                        id: user.id,
+                        firstName: result['firstName'] ?? user.firstName,
+                        lastName: result['lastName'] ?? user.lastName,
+                        email: result['email'] ?? user.email,
+                        phone: result['phone'] ?? user.phone,
+                        address: result['address'] ?? user.address,
+                      ),
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
             CircleAvatar(
               radius: 60,
               backgroundColor: Colors.white,
-              child: Icon(Icons.person, size: 70, color: Colors.blueGrey[700]),
+              child: Icon(Icons.person, size: 70, color: Colors.blue[700]),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               '${user.firstName} ${user.lastName}',
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2C688E),
+                color: Color(0xFF0D47A1),
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              user.email,
+              style: const TextStyle(fontSize: 16, color: Colors.black54),
+            ),
             const SizedBox(height: 30),
-            buildInfoCard(Icons.email, 'Email', user.email),
             buildInfoCard(Icons.phone, 'Phone', user.phone),
             buildInfoCard(Icons.location_on, 'Address', user.address),
-            const SizedBox(height: 10),
-            const SizedBox(height: 30),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final result = await Navigator.pushNamed(
-                        context,
-                        '/editProfile',
-                        arguments: user,
-                      );
-
-                      if (result != null && result is Map) {
-                        Navigator.pushReplacementNamed(
-                          // ignore: use_build_context_synchronously
-                          context,
-                          '/profile',
-                          arguments: UserProfile(
-                            id: user.id,
-                            firstName: result['firstName'] ?? user.firstName,
-                            lastName: result['lastName'] ?? user.lastName,
-                            email: result['email'] ?? user.email,
-                            phone: result['phone'] ?? user.phone,
-                            address: result['address'] ?? user.address,
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 206, 202, 198),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.edit),
-                    label: const Text(
-                      'Edit Profile',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-              ],
-            ),
           ],
         ),
       ),
@@ -120,14 +99,13 @@ class ProfilePage extends StatelessWidget {
   Widget buildInfoCard(IconData icon, String title, String value) {
     return Card(
       elevation: 3,
-      shadowColor: Colors.black26,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.symmetric(vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF2C688E), size: 28),
+            Icon(icon, color: const Color(0xFF0D47A1), size: 28),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -141,9 +119,9 @@ class ProfilePage extends StatelessWidget {
                   Text(
                     value,
                     style: const TextStyle(
-                      color: Colors.black87,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
                   ),
                 ],

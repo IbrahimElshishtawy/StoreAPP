@@ -54,7 +54,6 @@ class _HomePageState extends State<HomePage> {
       drawer: Drawer(
         child: Column(
           children: [
-            // رأس القائمة الجانبية
             UserAccountsDrawerHeader(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -80,8 +79,6 @@ class _HomePageState extends State<HomePage> {
                 userData != null ? userData!["email"] : 'Welcome!',
               ),
             ),
-
-            // عناصر القائمة الجانبية
             Expanded(
               child: ListView(
                 children: [
@@ -94,25 +91,33 @@ class _HomePageState extends State<HomePage> {
                     onTap: () {
                       Navigator.pop(context);
                       if (userData != null) {
-                        final userProfile = UserProfile(
-                          id: userData!['uid'],
-                          firstName: userData!['firstName'],
-                          lastName: userData!['lastName'],
-                          email: userData!['email'],
-                          phone: userData!['phone'],
-                          address: userData!['address'],
-                        );
+                        final uid =
+                            FirebaseAuth.instance.currentUser?.uid ?? '';
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ProfilePage(user: userProfile),
+                            builder: (_) => ProfilePage(
+                              user: UserProfile(
+                                id: uid,
+                                firstName: userData!['firstName'],
+                                lastName: userData!['lastName'],
+                                email: userData!['email'],
+                                phone: userData!['phone'],
+                                address: userData!['address'],
+                              ),
+                            ),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("User data not loaded yet."),
                           ),
                         );
                       }
                     },
                   ),
                   const Divider(),
-
                   ListTile(
                     leading: const Icon(
                       Icons.cloud_upload_outlined,
@@ -136,7 +141,6 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   const Divider(),
-
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),
                     title: const Text('Logout'),
@@ -152,7 +156,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -166,9 +169,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-
       body: pages[currentIndex],
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (index) => setState(() => currentIndex = index),
