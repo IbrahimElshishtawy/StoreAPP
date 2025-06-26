@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_underscores
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:store/models/prodect_model.dart';
 import 'package:store/widget/items_cart_product.dart';
 
@@ -12,9 +13,26 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  double _totalPrice = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateTotal();
+  }
+
+  void _calculateTotal() {
+    _totalPrice = 0.0;
+    for (var product in cartItems) {
+      final qty = cartQuantities[product.id] ?? 1;
+      _totalPrice += ((product.price ?? 0) * qty);
+    }
+  }
+
   void _incrementQuantity(String productId) {
     setState(() {
       cartQuantities[productId] = (cartQuantities[productId] ?? 1) + 1;
+      _calculateTotal();
     });
   }
 
@@ -26,17 +44,9 @@ class _CartPageState extends State<CartPage> {
           cartQuantities.remove(productId);
           cartItems.removeWhere((item) => item.id == productId);
         }
+        _calculateTotal();
       }
     });
-  }
-
-  double get totalPrice {
-    double total = 0.0;
-    for (var product in cartItems) {
-      final qty = cartQuantities[product.id] ?? 1;
-      total += ((product.price ?? 0) * qty);
-    }
-    return total;
   }
 
   void _placeOrder() {
@@ -57,6 +67,7 @@ class _CartPageState extends State<CartPage> {
     setState(() {
       cartItems.clear();
       cartQuantities.clear();
+      _totalPrice = 0.0;
     });
   }
 
@@ -86,12 +97,16 @@ class _CartPageState extends State<CartPage> {
                           child: ListTile(
                             leading: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                product.imageUrl ?? '',
+                              child: CachedNetworkImage(
+                                imageUrl: product.imageUrl ?? '',
                                 width: 60,
                                 height: 60,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                placeholder: (_, __) =>
+                                    const CircularProgressIndicator(
+                                      strokeWidth: 1,
+                                    ),
+                                errorWidget: (_, __, ___) =>
                                     const Icon(Icons.broken_image, size: 40),
                               ),
                             ),
@@ -122,14 +137,11 @@ class _CartPageState extends State<CartPage> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      top: 8,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Row(
@@ -143,7 +155,7 @@ class _CartPageState extends State<CartPage> {
                               ),
                             ),
                             Text(
-                              '\$${totalPrice.toStringAsFixed(2)}',
+                              '\$${_totalPrice.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -153,20 +165,21 @@ class _CartPageState extends State<CartPage> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        ElevatedButton.icon(
-                          onPressed: _placeOrder,
-                          icon: const Icon(Icons.check_circle_outline),
-                          label: const Text("Place Order"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                        if (cartItems.isNotEmpty)
+                          ElevatedButton.icon(
+                            onPressed: _placeOrder,
+                            icon: const Icon(Icons.check_circle_outline),
+                            label: const Text("Place Order"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.teal,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              textStyle: const TextStyle(fontSize: 16),
                             ),
-                            textStyle: const TextStyle(fontSize: 16),
                           ),
-                        ),
                       ],
                     ),
                   ),

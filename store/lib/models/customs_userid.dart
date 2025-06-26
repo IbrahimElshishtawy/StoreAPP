@@ -9,6 +9,8 @@ class UserProfile {
   final String phone;
   final String? password;
 
+  String? imageUrl;
+
   UserProfile({
     required this.id,
     required this.firstName,

@@ -1,8 +1,11 @@
 // ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:store/models/customs_userid.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -22,8 +25,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController addressController;
   late TextEditingController passwordController;
 
+  File? _profileImage;
+  String? _imageUrl;
   bool isLoading = false;
   bool showPassword = false;
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -33,7 +40,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
     emailController = TextEditingController(text: widget.user.email);
     phoneController = TextEditingController(text: widget.user.phone);
     addressController = TextEditingController(text: widget.user.address);
-    passwordController = TextEditingController(); // كلمة المرور الجديدة
+    passwordController = TextEditingController();
+    _imageUrl = widget.user.imageUrl;
+  }
+
+  Future<void> pickImage() async {
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _profileImage = File(picked.path));
+    }
+  }
+
+  Future<String?> uploadImage(File imageFile) async {
+    try {
+      final uid = widget.user.id;
+      final ref = FirebaseStorage.instance.ref().child(
+        'profile_images/$uid.jpg',
+      );
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ Failed to upload image: $e')));
+      return null;
+    }
   }
 
   Future<void> updateProfile() async {
@@ -42,6 +73,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final uid = widget.user.id;
       final currentUser = FirebaseAuth.instance.currentUser;
 
+      // رفع الصورة لو موجودة
+      if (_profileImage != null) {
+        final url = await uploadImage(_profileImage!);
+        if (url != null) {
+          _imageUrl = url;
+        }
+      }
+
       // تحديث Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'firstName': firstNameController.text.trim(),
@@ -49,9 +88,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'email': emailController.text.trim(),
         'phone': phoneController.text.trim(),
         'address': addressController.text.trim(),
+        if (_imageUrl != null) 'profileImage': _imageUrl,
       });
 
-      // تحديث الإيميل وكلمة المرور في FirebaseAuth
       if (emailController.text.trim() != currentUser?.email) {
         await currentUser?.updateEmail(emailController.text.trim());
       }
@@ -66,6 +105,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'email': emailController.text.trim(),
         'phone': phoneController.text.trim(),
         'address': addressController.text.trim(),
+        'imageUrl': _imageUrl,
       });
     } catch (e) {
       ScaffoldMessenger.of(
@@ -114,6 +154,31 @@ class _EditProfilePageState extends State<EditProfilePage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            GestureDetector(
+              onTap: pickImage,
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: _profileImage != null
+                    ? FileImage(_profileImage!)
+                    : (_imageUrl != null
+                              ? NetworkImage(_imageUrl!)
+                              : const AssetImage('assets/image/images.png'))
+                          as ImageProvider,
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: CircleAvatar(
+                    radius: 15,
+                    backgroundColor: Colors.blue,
+                    child: const Icon(
+                      Icons.edit,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             buildTextField('First Name', firstNameController),
             buildTextField('Last Name', lastNameController),
             buildTextField(

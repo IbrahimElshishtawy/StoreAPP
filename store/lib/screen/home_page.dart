@@ -19,171 +19,185 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
-  Map<String, dynamic>? userData;
-
   final List<Widget> pages = [
     const ProductsPage(),
     const CartPage(),
     const SearchPage(),
   ];
 
+  late Future<Map<String, dynamic>?> userFuture;
+
   @override
   void initState() {
     super.initState();
-    getUserData();
+    userFuture = getUserData();
   }
 
-  Future<void> getUserData() async {
+  Future<Map<String, dynamic>?> getUserData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .get();
-      if (doc.exists) {
-        setState(() {
-          userData = doc.data();
-        });
-      }
+      return doc.data();
     }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Drawer(
-        child: Column(
-          children: [
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.lightGreenAccent, Color(0xFF42A5F5)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              currentAccountPicture: const CircleAvatar(
-                radius: 30,
-                backgroundImage: AssetImage('assets/image/images.png'),
-              ),
-              accountName: Text(
-                userData != null
-                    ? '${userData!["firstName"]} ${userData!["lastName"]}'
-                    : 'Store App',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              accountEmail: Text(
-                userData != null ? userData!["email"] : 'Welcome!',
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                children: [
-                  ListTile(
-                    leading: const Icon(
-                      Icons.person_outline,
-                      color: Colors.teal,
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: userFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // شاشة تحميل سريعة
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final userData = snapshot.data;
+
+        return Scaffold(
+          drawer: Drawer(
+            child: Column(
+              children: [
+                UserAccountsDrawerHeader(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.lightGreenAccent, Color(0xFF42A5F5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    title: const Text('Profile'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      if (userData != null) {
-                        final uid =
-                            FirebaseAuth.instance.currentUser?.uid ?? '';
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProfilePage(
-                              user: UserProfile(
-                                id: uid,
-                                firstName: userData!['firstName'],
-                                lastName: userData!['lastName'],
-                                email: userData!['email'],
-                                phone: userData!['phone'],
-                                address: userData!['address'],
+                  ),
+                  currentAccountPicture: const CircleAvatar(
+                    radius: 30,
+                    backgroundImage: AssetImage('assets/image/images.png'),
+                  ),
+                  accountName: Text(
+                    userData != null
+                        ? '${userData["firstName"]} ${userData["lastName"]}'
+                        : 'Store App',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  accountEmail: Text(
+                    userData != null ? userData["email"] : 'Welcome!',
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      ListTile(
+                        leading: const Icon(
+                          Icons.person_outline,
+                          color: Colors.teal,
+                        ),
+                        title: const Text('Profile'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (userData != null) {
+                            final uid =
+                                FirebaseAuth.instance.currentUser?.uid ?? '';
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProfilePage(
+                                  user: UserProfile(
+                                    id: uid,
+                                    firstName: userData['firstName'],
+                                    lastName: userData['lastName'],
+                                    email: userData['email'],
+                                    phone: userData['phone'],
+                                    address: userData['address'],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("User data not loaded yet."),
-                          ),
-                        );
-                      }
-                    },
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("User data not loaded."),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.cloud_upload_outlined,
+                          color: Colors.green,
+                        ),
+                        title: const Text('Upload Product'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, '/upload');
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.inventory_2_outlined,
+                          color: Colors.orange,
+                        ),
+                        title: const Text('My Products'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, '/orders');
+                        },
+                      ),
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.logout, color: Colors.red),
+                        title: const Text('Logout'),
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await FirebaseAuth.instance.signOut();
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                      ),
+                    ],
                   ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.cloud_upload_outlined,
-                      color: Colors.green,
-                    ),
-                    title: const Text('Upload Product'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/upload');
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(
-                      Icons.inventory_2_outlined,
-                      color: Colors.orange,
-                    ),
-                    title: const Text('My Products'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/orders');
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text('Logout'),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await FirebaseAuth.instance.signOut();
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            centerTitle: true,
+            title: const Text(
+              'New Trend',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        ),
-      ),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          'New Trend',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
           ),
-        ),
-      ),
-      body: pages[currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (index) => setState(() => currentIndex = index),
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
+          body: pages[currentIndex],
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: currentIndex,
+            onTap: (index) => setState(() => currentIndex = index),
+            selectedItemColor: Colors.black,
+            unselectedItemColor: Colors.grey,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search),
+                label: 'Search',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-        ],
-      ),
+        );
+      },
     );
   }
 }
