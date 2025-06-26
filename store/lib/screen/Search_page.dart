@@ -13,8 +13,8 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  List<Product_model> _allProducts = [];
-  List<Product_model> _filteredProducts = [];
+  List<ProductModel> _allProducts = [];
+  List<ProductModel> _filteredProducts = [];
   bool _isLoading = true;
 
   @override
@@ -25,29 +25,26 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<void> _fetchProducts() async {
     try {
-      final products = await GetAllProductSerive().getallproduct();
+      final List<ProductModel> products = await GetAllProductService()
+          .getAllProducts();
       setState(() {
         _allProducts = products;
         _filteredProducts = products;
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      debugPrint('Error fetching products: $e');
+      setState(() => _isLoading = false);
+      debugPrint('❌ Error fetching products: $e');
     }
   }
 
   void _filterProducts(String query) {
     final results = _allProducts.where((product) {
-      return (product.title?.toLowerCase().contains(query.toLowerCase()) ??
-          false);
+      return product.title?.toLowerCase().contains(query.toLowerCase()) ??
+          false;
     }).toList();
 
-    setState(() {
-      _filteredProducts = results;
-    });
+    setState(() => _filteredProducts = results);
   }
 
   @override
@@ -84,9 +81,9 @@ class _SearchPageState extends State<SearchPage> {
                   itemBuilder: (context, index) {
                     return CustomCard(
                       product: _filteredProducts[index],
-                      title: '',
-                      price: '',
-                      image: '',
+                      title: _filteredProducts[index].title ?? '',
+                      price: _filteredProducts[index].price?.toString() ?? '',
+                      image: _filteredProducts[index].imageUrl ?? '',
                     );
                   },
                 ),

@@ -8,8 +8,7 @@ class UserProfile {
   final String email;
   final String phone;
   final String? password;
-
-  String? imageUrl;
+  late final String? imageUrl;
 
   UserProfile({
     required this.id,
@@ -19,6 +18,7 @@ class UserProfile {
     required this.email,
     required this.phone,
     this.password,
+    this.imageUrl,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> data, String documentId) {
@@ -29,7 +29,20 @@ class UserProfile {
       address: data['address'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
-      password: data['password'] ?? '',
+      password: data['password'], // ممكن تكون null أو مش موجودة
+      imageUrl: data['imageUrl'], // أضفنا دعم للصورة
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'firstName': firstName,
+      'lastName': lastName,
+      'address': address,
+      'email': email,
+      'phone': phone,
+      if (password != null) 'password': password,
+      if (imageUrl != null) 'imageUrl': imageUrl,
+    };
   }
 }

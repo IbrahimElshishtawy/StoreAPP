@@ -1,5 +1,5 @@
 // lib/cart.dart
 import 'package:store/models/prodect_model.dart';
 
-List<Product_model> cartItems = [];
+List<ProductModel> cartItems = [];
 Map<String, int> cartQuantities = {};

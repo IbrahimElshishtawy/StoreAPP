@@ -19,17 +19,16 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    checkLoginStatus();
+    _checkLoginStatus();
   }
 
-  Future<void> checkLoginStatus() async {
+  Future<void> _checkLoginStatus() async {
     final user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
-      // user already logged in → navigate to home
-      await Future.delayed(
-        const Duration(milliseconds: 500),
-      ); // optional small delay
+    // تأخير بسيط لجعل الانتقال أكثر سلاسة
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (user != null && user.emailVerified) {
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       setState(() => isChecking = false);
@@ -41,7 +40,16 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: isChecking
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Checking login status...'),
+                ],
+              ),
+            )
           : const WidgetLogin(),
     );
   }

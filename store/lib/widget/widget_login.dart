@@ -1,7 +1,8 @@
+// ignore_for_file: use_build_context_synchronously, unnecessary_underscores
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:store/widget/custom_btn.dart';
@@ -15,12 +16,12 @@ class WidgetLogin extends StatefulWidget {
 }
 
 class _WidgetLoginState extends State<WidgetLogin> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
+  final ValueNotifier<bool> isEmailValid = ValueNotifier(false);
   bool isPasswordVisible = false;
   bool isLoading = false;
-  bool isEmailValid = false;
   Timer? debounceTimer;
 
   @override
@@ -36,6 +37,7 @@ class _WidgetLoginState extends State<WidgetLogin> {
     emailController.dispose();
     passwordController.dispose();
     debounceTimer?.cancel();
+    isEmailValid.dispose();
     super.dispose();
   }
 
@@ -44,11 +46,7 @@ class _WidgetLoginState extends State<WidgetLogin> {
     debounceTimer = Timer(const Duration(milliseconds: 300), () {
       final email = emailController.text.trim();
       final valid = RegExp(r'^[\w-\.]+@gmail\.com$').hasMatch(email);
-      if (isEmailValid != valid) {
-        setState(() {
-          isEmailValid = valid;
-        });
-      }
+      isEmailValid.value = valid;
     });
   }
 
@@ -105,7 +103,7 @@ class _WidgetLoginState extends State<WidgetLogin> {
       };
 
       showMessage(msg);
-    } catch (e) {
+    } catch (_) {
       showMessage('Unexpected error occurred');
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -142,17 +140,22 @@ class _WidgetLoginState extends State<WidgetLogin> {
           ),
           const SizedBox(height: 8),
 
-          CustomTextField(
-            controller: emailController,
-            hintext: 'Enter your email',
-            labeltext: 'Email',
-            obscureText: false,
-            suffixIcon: emailController.text.trim().isEmpty
-                ? const Icon(Icons.email_outlined, color: Colors.grey)
-                : Icon(
-                    isEmailValid ? Icons.check_circle : Icons.cancel,
-                    color: isEmailValid ? Colors.green : Colors.red,
-                  ),
+          ValueListenableBuilder<bool>(
+            valueListenable: isEmailValid,
+            builder: (_, valid, __) {
+              return CustomTextField(
+                controller: emailController,
+                hintext: 'Enter your email',
+                labeltext: 'Email',
+                obscureText: false,
+                suffixIcon: emailController.text.trim().isEmpty
+                    ? const Icon(Icons.email_outlined, color: Colors.grey)
+                    : Icon(
+                        valid ? Icons.check_circle : Icons.cancel,
+                        color: valid ? Colors.green : Colors.red,
+                      ),
+              );
+            },
           ),
 
           const SizedBox(height: 20),
@@ -180,8 +183,21 @@ class _WidgetLoginState extends State<WidgetLogin> {
             ),
           ),
 
-          const SizedBox(height: 30),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {
+                // يمكنك ربطها بصفحة reset password
+              },
+              child: const Text(
+                'Forgot Password?',
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+          ),
 
+          const SizedBox(height: 20),
           isLoading
               ? const CircularProgressIndicator()
               : CustomBtn(

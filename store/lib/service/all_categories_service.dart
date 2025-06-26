@@ -1,13 +1,16 @@
-// ignore_for_file: unused_local_variable
 import 'dart:convert';
 import 'package:store/helper/api.dart';
 
 class AllCategoriesService {
-  Future<List<dynamic>> getAllCategories() async {
-    List<dynamic> data = await Api().get(
+  Future<List<String>> getAllCategories() async {
+    final responseData = await Api().get(
       url: 'https://fakestoreapi.com/products/categories',
     );
-    return data;
-    // make a get request to the api and return the list of categories
+
+    if (responseData is List) {
+      return responseData.map((item) => item.toString()).toList();
+    } else {
+      throw Exception("Unexpected response format: expected List");
+    }
   }
 }

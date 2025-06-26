@@ -38,7 +38,7 @@ class Store extends StatelessWidget {
           final user = settings.arguments as UserProfile;
           return MaterialPageRoute(builder: (_) => EditProfilePage(user: user));
         }
-        return null; // fallback لو المسار مش معروف
+        return null; 
       },
     );
   }

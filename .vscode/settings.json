@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/Store APP/StoreAPP/store/linux"
+    "cmake.sourceDirectory": "D:/Store APP/StoreAPP/store/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

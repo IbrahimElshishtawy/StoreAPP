@@ -8,8 +8,8 @@ class ProductsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Product_model>>(
-      future: GetAllProductSerive().getallproduct(),
+    return FutureBuilder<List<ProductModel>>(
+      future: GetAllProductService().getAllProducts(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -17,6 +17,7 @@ class ProductsPage extends StatelessWidget {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
+
         final products = snapshot.data ?? [];
         if (products.isEmpty) {
           return const Center(child: Text('No products available'));
@@ -32,11 +33,15 @@ class ProductsPage extends StatelessWidget {
           ),
           itemCount: products.length,
           itemBuilder: (context, index) {
+            final product = products[index];
+
             return CustomCard(
-              product: products[index],
-              title: '',
-              price: '',
-              image: '',
+              product: product,
+              title: product.title ?? 'No Title',
+              price: product.price != null
+                  ? '\$${product.price!.toStringAsFixed(2)}'
+                  : 'No Price',
+              image: product.imageUrl ?? '',
             );
           },
         );

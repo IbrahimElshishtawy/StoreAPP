@@ -2,7 +2,7 @@ import 'package:store/helper/api.dart';
 import 'package:store/models/prodect_model.dart';
 
 class AddProduct {
-  Future<Product_model> addproduct({
+  Future<ProductModel> addProduct({
     required String title,
     required String description,
     required double price,
@@ -10,7 +10,7 @@ class AddProduct {
     required String category,
     String? token,
   }) async {
-    Map<String, dynamic> data = await Api().post(
+    final responseData = await Api().post(
       url: 'https://fakestoreapi.com/products',
       body: {
         'title': title,
@@ -19,8 +19,13 @@ class AddProduct {
         'image': image,
         'category': category,
       },
-      token: null,
+      token: token,
     );
-    return Product_model.fromJson(data);
+
+    if (responseData is Map<String, dynamic>) {
+      return ProductModel.fromJson(responseData);
+    } else {
+      throw Exception("Invalid response data: Expected Map<String, dynamic>");
+    }
   }
 }

@@ -2,7 +2,7 @@ import 'package:store/helper/api.dart';
 import 'package:store/models/prodect_model.dart';
 
 class UpdataProduct {
-  Future<Product_model> updataProduct({
+  Future<ProductModel> updataProduct({
     required String title,
     required String description,
     required double price,
@@ -22,6 +22,6 @@ class UpdataProduct {
       },
       token: null,
     );
-    return Product_model.fromJson(data);
+    return ProductModel.fromJson(data);
   }
 }

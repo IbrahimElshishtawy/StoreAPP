@@ -1,71 +1,75 @@
-// ignore_for_file: unnecessary_brace_in_string_interps
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class Api {
+  /// GET request
   Future<dynamic> get({required String url}) async {
-    // Yo ur implementation here
-    http.Response response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      throw Exception(
-        'Failed to load data, status code: ${response.statusCode}',
-      );
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('GET failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('GET error: $e');
     }
   }
 
+  /// POST request
   Future<dynamic> post({
     required String url,
-    @required dynamic body,
-    @required dynamic token,
+    required dynamic body,
+    String? token,
   }) async {
-    Map<String, String> headers = {};
-    if (token != null) {
-      headers.addAll({'Authorization': 'Bearer $token'});
-    }
+    try {
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
 
-    http.Response response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
-
-    if (response.statusCode != 200) {
-      Map<String, dynamic> data = jsonDecode(response.body);
-      return data;
-    } else {
-      throw Exception(
-        'Failed to post data, status code: ${response.statusCode} with body: ${response.body}',
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
       );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('POST failed: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('POST error: $e');
     }
   }
 
+  /// PUT request
   Future<dynamic> put({
     required String url,
-    @required dynamic body,
-    @required dynamic token,
+    required dynamic body,
+    String? token,
   }) async {
-    Map<String, String> headers = {};
-    headers.addAll({'Content-Type': 'application/x-www-form-urlencoded'});
-    if (token != null) {
-      headers.addAll({'Authorization': 'Bearer $token'});
-    }
+    try {
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      };
 
-    http.Response response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
-
-    if (response.statusCode != 200) {
-      Map<String, dynamic> data = jsonDecode(response.body);
-      return data;
-    } else {
-      throw Exception(
-        'Failed to post data, status code: ${response.statusCode} with body: ${response.body}',
+      final response = await http.put(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
       );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('PUT failed: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('PUT error: $e');
     }
   }
 }

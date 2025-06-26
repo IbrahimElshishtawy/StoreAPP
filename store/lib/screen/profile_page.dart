@@ -18,61 +18,58 @@ class ProfilePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F9FC),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.lightGreenAccent, Color(0xFF42A5F5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.lightGreenAccent, Color(0xFF42A5F5)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          centerTitle: true,
-          title: const Text(
-            'Profile',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-            ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.white),
-              tooltip: 'Edit Profile',
-              onPressed: () async {
-                final result = await Navigator.pushNamed(
-                  context,
-                  '/editProfile',
-                  arguments: user,
-                );
-
-                if (result != null && result is Map) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProfilePage(
-                        user: UserProfile(
-                          id: user.id,
-                          firstName: result['firstName'] ?? user.firstName,
-                          lastName: result['lastName'] ?? user.lastName,
-                          email: result['email'] ?? user.email,
-                          phone: result['phone'] ?? user.phone,
-                          address: result['address'] ?? user.address,
-                          password: result['password'] ?? user.password,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
         ),
+        centerTitle: true,
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.white),
+            tooltip: 'Edit Profile',
+            onPressed: () async {
+              final result = await Navigator.pushNamed(
+                context,
+                '/editProfile',
+                arguments: user,
+              );
+
+              if (result != null && result is Map) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfilePage(
+                      user: UserProfile(
+                        id: user.id,
+                        firstName: result['firstName'] ?? user.firstName,
+                        lastName: result['lastName'] ?? user.lastName,
+                        email: result['email'] ?? user.email,
+                        phone: result['phone'] ?? user.phone,
+                        address: result['address'] ?? user.address,
+                        password: user.password,
+                      )..imageUrl = result['imageUrl'] ?? user.imageUrl,
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -82,7 +79,10 @@ class ProfilePage extends StatelessWidget {
             CircleAvatar(
               radius: 60,
               backgroundColor: Colors.white,
-              child: Icon(Icons.person, size: 70, color: Colors.blue[700]),
+              backgroundImage: user.imageUrl != null
+                  ? NetworkImage(user.imageUrl!)
+                  : const AssetImage('assets/image/images.png')
+                        as ImageProvider,
             ),
             const SizedBox(height: 16),
             Text(
@@ -125,8 +125,9 @@ class ProfilePage extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Color.fromARGB(137, 250, 248, 248),
+                      color: Colors.grey,
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),

@@ -1,8 +1,10 @@
+// ignore_for_file: use_build_context_synchronously
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dotted_border/dotted_border.dart'; // أضفها في pubspec.yaml
+import 'package:dotted_border/dotted_border.dart';
 
 class UploadProductPage extends StatefulWidget {
   const UploadProductPage({super.key});
@@ -30,7 +32,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
 
   Future<void> pickImage() async {
     if (isPickingImage) return;
-
     setState(() => isPickingImage = true);
     try {
       final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -42,6 +43,15 @@ class _UploadProductPageState extends State<UploadProductPage> {
     } finally {
       setState(() => isPickingImage = false);
     }
+  }
+
+  Future<String> uploadImageToFirebase(File file) async {
+    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    final ref = FirebaseStorage.instance.ref().child(
+      'product_images/$fileName.jpg',
+    );
+    final uploadTask = await ref.putFile(file);
+    return await uploadTask.ref.getDownloadURL();
   }
 
   Future<void> uploadProduct() async {
@@ -56,10 +66,15 @@ class _UploadProductPageState extends State<UploadProductPage> {
       return;
     }
 
+    if (_selectedImage == null) {
+      showSnack("Please select an image", color: Colors.orange);
+      return;
+    }
+
     setState(() => isLoading = true);
 
     try {
-      String imageUrl = _selectedImage?.path ?? '';
+      final imageUrl = await uploadImageToFirebase(_selectedImage!);
 
       await FirebaseFirestore.instance.collection('products').add({
         'name': name,
@@ -70,7 +85,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
       });
 
       showSnack("✅ Product uploaded successfully", color: Colors.green);
-
       nameController.clear();
       descriptionController.clear();
       priceController.clear();
@@ -142,11 +156,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
       onTap: pickImage,
       borderRadius: BorderRadius.circular(12),
       child: DottedBorder(
-        //     dashStrokeWidth: 1,
-        //   strokeColor: Colors.grey,
-        // dashPattern: [6, 4],
-        //borderType: BorderType.RRect,
-        //radius: Radius.circular(12),
         child: Container(
           width: double.infinity,
           height: 90,
@@ -229,8 +238,8 @@ class _UploadProductPageState extends State<UploadProductPage> {
                   TextFormField(
                     controller: priceController,
                     decoration: const InputDecoration(labelText: "Price"),
-                    onChanged: (_) => setState(() {}),
                     keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter price' : null,
                   ),

@@ -9,6 +9,9 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final TextInputType keyboardType;
+  final TextInputAction? textInputAction;
+  final bool autocorrect;
+  final bool enableSuggestions;
   final void Function(String)? onChanged;
 
   const CustomTextField({
@@ -19,6 +22,9 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.keyboardType = TextInputType.text,
+    this.textInputAction,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
     this.onChanged,
   }) : super(key: key);
 
@@ -30,10 +36,13 @@ class CustomTextField extends StatelessWidget {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
+        textInputAction: textInputAction,
+        autocorrect: autocorrect,
+        enableSuggestions: enableSuggestions,
         onChanged: onChanged,
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'Required';
+            return 'يرجى إدخال $labeltext';
           }
           return null;
         },

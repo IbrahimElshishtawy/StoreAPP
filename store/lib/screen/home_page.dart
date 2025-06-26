@@ -19,30 +19,41 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
-  final List<Widget> pages = [
-    const ProductsPage(),
-    const CartPage(),
-    const SearchPage(),
-  ];
+
+  final List<Widget> pages = const [ProductsPage(), CartPage(), SearchPage()];
 
   late Future<Map<String, dynamic>?> userFuture;
+  final String? uid = FirebaseAuth.instance.currentUser?.uid;
 
   @override
   void initState() {
     super.initState();
-    userFuture = getUserData();
+    if (uid == null) {
+      Future.microtask(() {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
+    } else {
+      userFuture = getUserData();
+    }
   }
 
   Future<Map<String, dynamic>?> getUserData() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
+    try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .get();
       return doc.data();
+    } catch (e) {
+      debugPrint("Error fetching user data: $e");
+      return null;
     }
-    return null;
+  }
+
+  void showToast(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -51,13 +62,18 @@ class _HomePageState extends State<HomePage> {
       future: userFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // شاشة تحميل سريعة
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        final userData = snapshot.data;
+        if (snapshot.hasError || snapshot.data == null) {
+          return const Scaffold(
+            body: Center(child: Text('⚠️ فشل تحميل بيانات المستخدم')),
+          );
+        }
+
+        final userData = snapshot.data!;
 
         return Scaffold(
           drawer: Drawer(
@@ -71,43 +87,37 @@ class _HomePageState extends State<HomePage> {
                       end: Alignment.bottomRight,
                     ),
                   ),
-                  currentAccountPicture: const CircleAvatar(
-                    radius: 30,
-                    backgroundImage: AssetImage('assets/image/images.png'),
+                  currentAccountPicture: CircleAvatar(
+                    backgroundImage:
+                        (userData['imageUrl'] != null &&
+                            userData['imageUrl'].toString().isNotEmpty)
+                        ? NetworkImage(userData['imageUrl'])
+                        : const AssetImage('assets/image/images.png')
+                              as ImageProvider,
                   ),
                   accountName: Text(
-                    userData != null
-                        ? '${userData["firstName"]} ${userData["lastName"]}'
-                        : 'Store App',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    '${userData["firstName"]} ${userData["lastName"]}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  accountEmail: Text(
-                    userData != null ? userData["email"] : 'Welcome!',
-                  ),
+                  accountEmail: Text(userData["email"]),
                 ),
                 Expanded(
-                  child: ListView(
-                    children: [
-                      ListTile(
-                        leading: const Icon(
-                          Icons.person_outline,
-                          color: Colors.teal,
-                        ),
-                        title: const Text('Profile'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          if (userData != null) {
-                            final uid =
-                                FirebaseAuth.instance.currentUser?.uid ?? '';
+                  child: ListTileTheme(
+                    iconColor: Colors.teal,
+                    textColor: Colors.black87,
+                    child: ListView(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.person_outline),
+                          title: const Text('Profile'),
+                          onTap: () {
+                            Navigator.pop(context);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => ProfilePage(
                                   user: UserProfile(
-                                    id: uid,
+                                    id: uid!,
                                     firstName: userData['firstName'],
                                     lastName: userData['lastName'],
                                     email: userData['email'],
@@ -117,49 +127,43 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("User data not loaded."),
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                      const Divider(),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.cloud_upload_outlined,
-                          color: Colors.green,
+                          },
                         ),
-                        title: const Text('Upload Product'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.pushNamed(context, '/upload');
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(
-                          Icons.inventory_2_outlined,
-                          color: Colors.orange,
+                        const Divider(thickness: 1.2),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.cloud_upload_outlined,
+                            color: Colors.green,
+                          ),
+                          title: const Text('Upload Product'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/upload');
+                          },
                         ),
-                        title: const Text('My Products'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.pushNamed(context, '/orders');
-                        },
-                      ),
-                      const Divider(),
-                      ListTile(
-                        leading: const Icon(Icons.logout, color: Colors.red),
-                        title: const Text('Logout'),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await FirebaseAuth.instance.signOut();
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                      ),
-                    ],
+                        ListTile(
+                          leading: const Icon(
+                            Icons.inventory_2_outlined,
+                            color: Colors.orange,
+                          ),
+                          title: const Text('My Products'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/orders');
+                          },
+                        ),
+                        const Divider(thickness: 1.2),
+                        ListTile(
+                          leading: const Icon(Icons.logout, color: Colors.red),
+                          title: const Text('Logout'),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await FirebaseAuth.instance.signOut();
+                            Navigator.pushReplacementNamed(context, '/login');
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -178,7 +182,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          body: pages[currentIndex],
+          body: IndexedStack(index: currentIndex, children: pages),
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: currentIndex,
             onTap: (index) => setState(() => currentIndex = index),

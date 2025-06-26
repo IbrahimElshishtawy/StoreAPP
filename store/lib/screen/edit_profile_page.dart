@@ -73,15 +73,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final uid = widget.user.id;
       final currentUser = FirebaseAuth.instance.currentUser;
 
-      // رفع الصورة لو موجودة
+      // Upload new image if selected
       if (_profileImage != null) {
         final url = await uploadImage(_profileImage!);
-        if (url != null) {
-          _imageUrl = url;
-        }
+        if (url != null) _imageUrl = url;
       }
 
-      // تحديث Firestore
+      // Update Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'firstName': firstNameController.text.trim(),
         'lastName': lastNameController.text.trim(),
@@ -91,12 +89,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
         if (_imageUrl != null) 'profileImage': _imageUrl,
       });
 
-      if (emailController.text.trim() != currentUser?.email) {
-        await currentUser?.updateEmail(emailController.text.trim());
+      // Update Firebase Auth email/password if changed
+      if (emailController.text.trim() != currentUser?.email &&
+          currentUser != null) {
+        await currentUser.updateEmail(emailController.text.trim());
       }
 
-      if (passwordController.text.trim().isNotEmpty) {
-        await currentUser?.updatePassword(passwordController.text.trim());
+      if (passwordController.text.trim().isNotEmpty && currentUser != null) {
+        await currentUser.updatePassword(passwordController.text.trim());
       }
 
       Navigator.pop(context, {
@@ -138,6 +138,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
+  ImageProvider getImageProvider() {
+    if (_profileImage != null) {
+      return FileImage(_profileImage!);
+    } else if (_imageUrl != null && _imageUrl!.isNotEmpty) {
+      return NetworkImage(_imageUrl!);
+    } else {
+      return const AssetImage('assets/image/images.png');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -158,12 +168,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onTap: pickImage,
               child: CircleAvatar(
                 radius: 50,
-                backgroundImage: _profileImage != null
-                    ? FileImage(_profileImage!)
-                    : (_imageUrl != null
-                              ? NetworkImage(_imageUrl!)
-                              : const AssetImage('assets/image/images.png'))
-                          as ImageProvider,
+                backgroundImage: getImageProvider(),
                 child: Align(
                   alignment: Alignment.bottomRight,
                   child: CircleAvatar(
@@ -224,6 +229,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                     ),
                   ),
+            const SizedBox(height: 30),
           ],
         ),
       ),

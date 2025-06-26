@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:store/models/prodect_model.dart';
-import 'package:store/widget/items_cart_product.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -14,6 +13,9 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   double _totalPrice = 0.0;
+
+  List<ProductModel> cartItems = [];
+  Map<String, int> cartQuantities = {};
 
   @override
   void initState() {

@@ -1,5 +1,3 @@
-// ignore_for_file: use_super_parameters
-
 import 'package:flutter/material.dart';
 
 class CustomBtn extends StatefulWidget {
@@ -9,12 +7,12 @@ class CustomBtn extends StatefulWidget {
   final IconData? icon;
 
   const CustomBtn({
-    Key? key,
+    super.key,
     required this.textbtn,
     required this.onPressed,
     required this.data,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomBtn> createState() => _CustomBtnState();
@@ -30,7 +28,9 @@ class _CustomBtnState extends State<CustomBtn> {
     try {
       await widget.onPressed(widget.data);
     } finally {
-      if (mounted) setState(() => isProcessing = false);
+      if (mounted) {
+        setState(() => isProcessing = false);
+      }
     }
   }
 
