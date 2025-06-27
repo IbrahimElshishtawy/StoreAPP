@@ -1,8 +1,10 @@
-// ignore_for_file: unnecessary_underscores
-
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import 'package:store/models/prodect_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:store/widget/items_cart_product.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -12,72 +14,108 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  double _totalPrice = 0.0;
+  bool isLoading = false;
 
-  List<ProductModel> cartItems = [];
-  Map<String, int> cartQuantities = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _calculateTotal();
-  }
-
-  void _calculateTotal() {
-    _totalPrice = 0.0;
-    for (var product in cartItems) {
-      final qty = cartQuantities[product.id] ?? 1;
-      _totalPrice += ((product.price ?? 0) * qty);
+  Future<void> placeOrder(BuildContext context, CartProvider cart) async {
+    if (cart.items.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("🛒 Your cart is empty")));
+      return;
     }
-  }
 
-  void _incrementQuantity(String productId) {
-    setState(() {
-      cartQuantities[productId] = (cartQuantities[productId] ?? 1) + 1;
-      _calculateTotal();
-    });
-  }
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("⚠️ You must be logged in to place an order"),
+        ),
+      );
+      return;
+    }
 
-  void _decrementQuantity(String productId) {
-    setState(() {
-      if (cartQuantities[productId] != null) {
-        cartQuantities[productId] = cartQuantities[productId]! - 1;
-        if (cartQuantities[productId]! <= 0) {
-          cartQuantities.remove(productId);
-          cartItems.removeWhere((item) => item.id == productId);
-        }
-        _calculateTotal();
-      }
-    });
-  }
+    setState(() => isLoading = true);
 
-  void _placeOrder() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Order Placed"),
-        content: const Text("Your order has been placed successfully!"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
-          ),
-        ],
-      ),
-    );
+    try {
+      final orderRef = FirebaseFirestore.instance.collection('orders').doc();
+      await orderRef.set({
+        'orderId': orderRef.id,
+        'userId': user.uid,
+        'items': cart.cartItemsForOrder,
+        'totalPrice': cart.totalPrice,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
-    setState(() {
-      cartItems.clear();
-      cartQuantities.clear();
-      _totalPrice = 0.0;
-    });
+      cart.clearCart();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("✅ Order placed successfully!")),
+      );
+
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("✅ Order Placed"),
+          content: const Text("Your order has been placed successfully!"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Failed to place order: $e")));
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
+    final cartItems = cart.items;
+    final quantities = cart.quantities;
+
     return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Text("Your Cart"),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              backgroundColor: Colors.white,
+              radius: 12,
+              child: Text(
+                cartItems.length.toString(),
+                style: const TextStyle(fontSize: 12, color: Colors.teal),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color.fromARGB(255, 230, 230, 230),
+      ),
       body: cartItems.isEmpty
-          ? const Center(child: Text('The cart is empty'))
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 60,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Your cart is empty',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
           : SafeArea(
               child: Column(
                 children: [
@@ -86,7 +124,7 @@ class _CartPageState extends State<CartPage> {
                       itemCount: cartItems.length,
                       itemBuilder: (context, index) {
                         final product = cartItems[index];
-                        final quantity = cartQuantities[product.id] ?? 1;
+                        final quantity = quantities[product.id] ?? 1;
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
@@ -104,10 +142,11 @@ class _CartPageState extends State<CartPage> {
                                 width: 60,
                                 height: 60,
                                 fit: BoxFit.cover,
-                                placeholder: (_, __) =>
-                                    const CircularProgressIndicator(
-                                      strokeWidth: 1,
-                                    ),
+                                placeholder: (_, __) => const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(),
+                                ),
                                 errorWidget: (_, __, ___) =>
                                     const Icon(Icons.broken_image, size: 40),
                               ),
@@ -119,8 +158,35 @@ class _CartPageState extends State<CartPage> {
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.remove_circle_outline),
-                                  onPressed: () =>
-                                      _decrementQuantity(product.id),
+                                  onPressed: () {
+                                    if (quantity == 1) {
+                                      showDialog(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text("Remove Product"),
+                                          content: const Text(
+                                            "Quantity is 1. Remove this product from the cart?",
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx).pop(),
+                                              child: const Text("Cancel"),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                cart.removeFromCart(product);
+                                                Navigator.of(ctx).pop();
+                                              },
+                                              child: const Text("Remove"),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    } else {
+                                      cart.decreaseQuantity(product.id);
+                                    }
+                                  },
                                 ),
                                 Text(
                                   quantity.toString(),
@@ -129,7 +195,7 @@ class _CartPageState extends State<CartPage> {
                                 IconButton(
                                   icon: const Icon(Icons.add_circle_outline),
                                   onPressed: () =>
-                                      _incrementQuantity(product.id),
+                                      cart.increaseQuantity(product.id),
                                 ),
                               ],
                             ),
@@ -157,31 +223,43 @@ class _CartPageState extends State<CartPage> {
                               ),
                             ),
                             Text(
-                              '\$${_totalPrice.toStringAsFixed(2)}',
+                              '\$${cart.totalPrice.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.teal,
+                                color: Color.fromARGB(255, 56, 124, 110),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        if (cartItems.isNotEmpty)
-                          ElevatedButton.icon(
-                            onPressed: _placeOrder,
-                            icon: const Icon(Icons.check_circle_outline),
-                            label: const Text("Place Order"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              textStyle: const TextStyle(fontSize: 16),
-                            ),
+                        ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () => placeOrder(context, cart),
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.check_circle_outline),
+                          label: Text(
+                            isLoading ? "Placing Order..." : "Place Order",
                           ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            textStyle: const TextStyle(fontSize: 16),
+                          ),
+                        ),
                       ],
                     ),
                   ),

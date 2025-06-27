@@ -73,23 +73,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final uid = widget.user.id;
       final currentUser = FirebaseAuth.instance.currentUser;
 
-      // Upload new image if selected
       if (_profileImage != null) {
         final url = await uploadImage(_profileImage!);
         if (url != null) _imageUrl = url;
       }
 
-      // Update Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'firstName': firstNameController.text.trim(),
         'lastName': lastNameController.text.trim(),
         'email': emailController.text.trim(),
         'phone': phoneController.text.trim(),
         'address': addressController.text.trim(),
-        if (_imageUrl != null) 'profileImage': _imageUrl,
+        if (_imageUrl != null) 'imageUrl': _imageUrl,
       });
 
-      // Update Firebase Auth email/password if changed
       if (emailController.text.trim() != currentUser?.email &&
           currentUser != null) {
         await currentUser.updateEmail(emailController.text.trim());

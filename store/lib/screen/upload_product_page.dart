@@ -18,11 +18,13 @@ class _UploadProductPageState extends State<UploadProductPage> {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   final priceController = TextEditingController();
+  final urlController = TextEditingController();
 
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
   bool isLoading = false;
   bool isPickingImage = false;
+  bool useUrlInstead = false;
 
   void showSnack(String message, {Color? color}) {
     ScaffoldMessenger.of(
@@ -66,16 +68,24 @@ class _UploadProductPageState extends State<UploadProductPage> {
       return;
     }
 
-    if (_selectedImage == null) {
-      showSnack("Please select an image", color: Colors.orange);
-      return;
+    String? imageUrl;
+    if (useUrlInstead) {
+      imageUrl = urlController.text.trim();
+      if (imageUrl.isEmpty) {
+        showSnack("Please enter image URL", color: Colors.orange);
+        return;
+      }
+    } else {
+      if (_selectedImage == null) {
+        showSnack("Please select an image", color: Colors.orange);
+        return;
+      }
+      imageUrl = await uploadImageToFirebase(_selectedImage!);
     }
 
     setState(() => isLoading = true);
 
     try {
-      final imageUrl = await uploadImageToFirebase(_selectedImage!);
-
       await FirebaseFirestore.instance.collection('products').add({
         'name': name,
         'description': description,
@@ -88,6 +98,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
       nameController.clear();
       descriptionController.clear();
       priceController.clear();
+      urlController.clear();
       setState(() => _selectedImage = null);
     } catch (e) {
       showSnack("Error uploading product: $e", color: Colors.red);
@@ -105,25 +116,36 @@ class _UploadProductPageState extends State<UploadProductPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _selectedImage != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      _selectedImage!,
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Container(
-                    height: 180,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(child: Text("No image selected")),
-                  ),
+            if (!useUrlInstead && _selectedImage != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  _selectedImage!,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              )
+            else if (useUrlInstead && urlController.text.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  urlController.text,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              )
+            else
+              Container(
+                height: 180,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(child: Text("No image selected")),
+              ),
             const SizedBox(height: 10),
             Text(
               nameController.text.isEmpty
@@ -152,48 +174,79 @@ class _UploadProductPageState extends State<UploadProductPage> {
   }
 
   Widget buildImagePicker() {
-    return InkWell(
-      onTap: pickImage,
-      borderRadius: BorderRadius.circular(12),
-      child: DottedBorder(
-        child: Container(
-          width: double.infinity,
-          height: 90,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            ChoiceChip(
+              label: const Text("Upload Image"),
+              selected: !useUrlInstead,
+              onSelected: (_) => setState(() => useUrlInstead = false),
+            ),
+            const SizedBox(width: 10),
+            ChoiceChip(
+              label: const Text("Use Image URL"),
+              selected: useUrlInstead,
+              onSelected: (_) => setState(() => useUrlInstead = true),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (!useUrlInstead)
+          InkWell(
+            onTap: pickImage,
             borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade100,
-          ),
-          child: Row(
-            children: [
-              _selectedImage != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        _selectedImage!,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
+            child: DottedBorder(
+              child: Container(
+                width: double.infinity,
+                height: 90,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade100,
+                ),
+                child: Row(
+                  children: [
+                    _selectedImage != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              _selectedImage!,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.image_outlined,
+                            size: 60,
+                            color: Colors.grey,
+                          ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        "Tap to select an image",
+                        style: TextStyle(fontSize: 16, color: Colors.black54),
                       ),
-                    )
-                  : const Icon(
-                      Icons.image_outlined,
-                      size: 60,
-                      color: Colors.grey,
                     ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  _selectedImage != null
-                      ? "Tap to change the image"
-                      : "Tap to select an image",
-                  style: const TextStyle(fontSize: 16, color: Colors.black54),
+                  ],
                 ),
               ),
-            ],
+            ),
+          )
+        else
+          TextFormField(
+            controller: urlController,
+            decoration: const InputDecoration(labelText: "Image URL"),
+            validator: (value) {
+              if (useUrlInstead && (value == null || value.isEmpty)) {
+                return 'Please enter a valid image URL';
+              }
+              return null;
+            },
           ),
-        ),
-      ),
+      ],
     );
   }
 

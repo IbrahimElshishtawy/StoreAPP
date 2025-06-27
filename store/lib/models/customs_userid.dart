@@ -8,7 +8,7 @@ class UserProfile {
   final String email;
   final String phone;
   final String? password;
-  late final String? imageUrl;
+  final String? imageUrl; // ✅ شيلنا late
 
   UserProfile({
     required this.id,
@@ -29,8 +29,8 @@ class UserProfile {
       address: data['address'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
-      password: data['password'], // ممكن تكون null أو مش موجودة
-      imageUrl: data['imageUrl'], // أضفنا دعم للصورة
+      password: data['password'],
+      imageUrl: data['imageUrl'],
     );
   }
 

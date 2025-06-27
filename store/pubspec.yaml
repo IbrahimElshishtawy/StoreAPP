@@ -27,6 +27,7 @@ dependencies:
   dotted_border: ^3.0.1
   cached_network_image: ^3.4.1
   firebase_storage: ^12.4.7
+  provider: ^6.1.5
 
 dev_dependencies:
   flutter_test:

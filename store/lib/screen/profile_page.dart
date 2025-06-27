@@ -4,18 +4,30 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:store/models/customs_userid.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   final UserProfile user;
 
   const ProfilePage({super.key, required this.user});
 
   @override
-  Widget build(BuildContext context) {
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late UserProfile updatedUser;
+
+  @override
+  void initState() {
+    super.initState();
+    updatedUser = widget.user;
     if (kDebugMode) {
       print("🧾 ProfilePage opened");
-      print("👤 User Data: ${user.firstName} ${user.lastName}");
+      print("👤 User Data: ${updatedUser.firstName} ${updatedUser.lastName}");
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F9FC),
       appBar: AppBar(
@@ -46,26 +58,22 @@ class ProfilePage extends StatelessWidget {
               final result = await Navigator.pushNamed(
                 context,
                 '/editProfile',
-                arguments: user,
+                arguments: updatedUser,
               );
 
-              if (result != null && result is Map) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ProfilePage(
-                      user: UserProfile(
-                        id: user.id,
-                        firstName: result['firstName'] ?? user.firstName,
-                        lastName: result['lastName'] ?? user.lastName,
-                        email: result['email'] ?? user.email,
-                        phone: result['phone'] ?? user.phone,
-                        address: result['address'] ?? user.address,
-                        password: user.password,
-                      )..imageUrl = result['imageUrl'] ?? user.imageUrl,
-                    ),
-                  ),
-                );
+              if (result != null && result is Map<String, dynamic>) {
+                setState(() {
+                  updatedUser = UserProfile(
+                    id: updatedUser.id,
+                    firstName: result['firstName'] ?? updatedUser.firstName,
+                    lastName: result['lastName'] ?? updatedUser.lastName,
+                    email: result['email'] ?? updatedUser.email,
+                    phone: result['phone'] ?? updatedUser.phone,
+                    address: result['address'] ?? updatedUser.address,
+                    password: updatedUser.password,
+                    imageUrl: result['imageUrl'] ?? updatedUser.imageUrl,
+                  );
+                });
               }
             },
           ),
@@ -79,14 +87,14 @@ class ProfilePage extends StatelessWidget {
             CircleAvatar(
               radius: 60,
               backgroundColor: Colors.white,
-              backgroundImage: user.imageUrl != null
-                  ? NetworkImage(user.imageUrl!)
+              backgroundImage: updatedUser.imageUrl != null
+                  ? NetworkImage(updatedUser.imageUrl!)
                   : const AssetImage('assets/image/images.png')
                         as ImageProvider,
             ),
             const SizedBox(height: 16),
             Text(
-              '${user.firstName} ${user.lastName}',
+              '${updatedUser.firstName} ${updatedUser.lastName}',
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -95,12 +103,12 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              user.email,
+              updatedUser.email,
               style: const TextStyle(fontSize: 16, color: Colors.black54),
             ),
             const SizedBox(height: 30),
-            buildInfoCard(Icons.phone, 'Phone', user.phone),
-            buildInfoCard(Icons.location_on, 'Address', user.address),
+            buildInfoCard(Icons.phone, 'Phone', updatedUser.phone),
+            buildInfoCard(Icons.location_on, 'Address', updatedUser.address),
           ],
         ),
       ),

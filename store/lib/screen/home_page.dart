@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:store/models/customs_userid.dart';
 import 'package:store/screen/Search_page.dart';
 import 'package:store/screen/cart_page_product.dart';
+import 'package:store/screen/order_hostory_page.dart';
 import 'package:store/screen/product_page.dart';
 import 'package:store/screen/profile_page.dart';
 
@@ -141,6 +142,7 @@ class _HomePageState extends State<HomePage> {
                             Navigator.pushNamed(context, '/upload');
                           },
                         ),
+
                         ListTile(
                           leading: const Icon(
                             Icons.inventory_2_outlined,
@@ -150,6 +152,22 @@ class _HomePageState extends State<HomePage> {
                           onTap: () {
                             Navigator.pop(context);
                             Navigator.pushNamed(context, '/orders');
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.history,
+                            color: Colors.indigo,
+                          ),
+                          title: const Text('Order History'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const OrderHistoryPage(),
+                              ),
+                            );
                           },
                         ),
                         const Divider(thickness: 1.2),
