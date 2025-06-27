@@ -1,5 +1,4 @@
 // ignore_for_file: unused_local_variable
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +10,7 @@ import 'package:store/screen/login_page.dart';
 import 'package:store/screen/my_products_page.dart';
 import 'package:store/screen/profile_page.dart';
 import 'package:store/screen/rgister_page.dart';
+import 'package:store/screen/splash_screen.dart';
 import 'package:store/screen/upload_product_page.dart';
 import 'package:store/widget/items_cart_product.dart';
 
@@ -29,8 +29,9 @@ class Store extends StatelessWidget {
       providers: [ChangeNotifierProvider(create: (_) => CartProvider())],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        initialRoute: '/login',
+        initialRoute: '/',
         routes: {
+          '/': (context) => const SplashScreen(),
           '/login': (context) => const LoginPage(),
           '/register': (context) => const RegisterPage(),
           '/home': (context) => const HomePage(),
