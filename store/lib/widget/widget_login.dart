@@ -1,10 +1,11 @@
-// ignore_for_file: use_build_context_synchronously, unnecessary_underscores
+// ignore_for_file: use_build_context_synchronously, unnecessary_underscores, unused_local_variable
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:store/screen/forgot_pass.dart';
 import 'package:store/widget/custom_btn.dart';
 import 'package:store/widget/custom_textfeld.dart';
 
@@ -188,7 +189,11 @@ class _WidgetLoginState extends State<WidgetLogin> {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: () {
-                // يمكنك ربطها بصفحة reset password
+                // في routes أو Navigator.push
+                var push = Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ForgetPasswordPage()),
+                );
               },
               child: const Text(
                 'Forgot Password?',

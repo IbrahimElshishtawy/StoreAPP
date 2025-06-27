@@ -23,7 +23,7 @@ class OrderHistoryPage extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text("Error loading orders"));
+            return Center(child: Text("❌ Error: ${snapshot.error}"));
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {

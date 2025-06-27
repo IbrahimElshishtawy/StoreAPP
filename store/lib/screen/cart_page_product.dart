@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, unnecessary_underscores
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
