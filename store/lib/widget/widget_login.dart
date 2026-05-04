@@ -75,7 +75,7 @@ class _WidgetLoginState extends State<WidgetLogin> {
 
           ValueListenableBuilder<bool>(
             valueListenable: isEmailValid,
-            builder: (_, valid, __) {
+            builder: (context, valid, child) {
               return CustomTextField(
                 controller: emailController,
                 hintext: 'Enter your email',
@@ -136,7 +136,7 @@ class _WidgetLoginState extends State<WidgetLogin> {
           const SizedBox(height: 20),
           CustomBtn(
             textbtn: 'Login',
-            onPressed: (_) {
+            onPressed: (_) async {
               context.read<AuthBloc>().add(
                     LoginRequested(
                       emailController.text.trim(),

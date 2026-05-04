@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../models/dummy_product.dart';
 
@@ -35,7 +37,9 @@ class VirtualProductCard extends StatelessWidget {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
                     color: const Color(0xFFF5F7FA),
                     image: DecorationImage(
                       image: NetworkImage(product.imageUrl),
@@ -48,9 +52,14 @@ class VirtualProductCard extends StatelessWidget {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE53935), // Red highlight for best value
+                        color: const Color(
+                          0xFFE53935,
+                        ), // Red highlight for best value
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import '../models/dummy_product.dart';
 
@@ -10,18 +12,22 @@ class ProductVirtualView extends StatefulWidget {
   State<ProductVirtualView> createState() => _ProductVirtualViewState();
 }
 
-class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTickerProviderStateMixin {
+class _ProductVirtualViewState extends State<ProductVirtualView>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _rotationY;
   late Animation<double> _rotationX;
-  
+
   double _panX = 0;
   double _panY = 0;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat();
     _rotationY = Tween<double>(begin: 0, end: 3.14159 * 2).animate(_controller);
     _rotationX = Tween<double>(begin: -0.1, end: 0.1).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
@@ -44,12 +50,10 @@ class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTick
           Positioned.fill(
             child: Opacity(
               opacity: 0.1,
-              child: CustomPaint(
-                painter: GridPainter(),
-              ),
+              child: CustomPaint(painter: GridPainter()),
             ),
           ),
-          
+
           // Virtual Product Interactive Area
           Center(
             child: GestureDetector(
@@ -79,7 +83,7 @@ class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTick
                             blurRadius: 40,
                             spreadRadius: -10,
                             offset: const Offset(0, 20),
-                          )
+                          ),
                         ],
                       ),
                       child: ClipRRect(
@@ -113,11 +117,14 @@ class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTick
               ),
             ),
           ),
-          
+
           // UI Overlay
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -128,13 +135,22 @@ class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTick
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withOpacity(0.2)),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                        ),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -142,11 +158,18 @@ class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTick
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.threed_rotation, color: Colors.white, size: 16),
+                        Icon(
+                          Icons.threed_rotation,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                         SizedBox(width: 8),
                         Text(
                           '360° View',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -155,7 +178,7 @@ class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTick
               ),
             ),
           ),
-          
+
           // Bottom instructions
           Positioned(
             bottom: 40,
@@ -163,7 +186,10 @@ class _ProductVirtualViewState extends State<ProductVirtualView> with SingleTick
             right: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.4),
                   borderRadius: BorderRadius.circular(30),
@@ -190,11 +216,11 @@ class GridPainter extends CustomPainter {
       ..strokeWidth = 1.0;
 
     double step = 40.0;
-    
+
     for (double i = 0; i < size.width; i += step) {
       canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
     }
-    
+
     for (double i = 0; i < size.height; i += step) {
       canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
     }
