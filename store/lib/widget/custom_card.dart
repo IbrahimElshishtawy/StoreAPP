@@ -1,16 +1,16 @@
-// ignore_for_file: unnecessary_underscores
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:store/models/prodect_model.dart';
-import 'package:store/widget/items_cart_product.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:store/features/cart/presentation/bloc/cart_event.dart';
+import 'package:store/features/cart/domain/entities/cart_item.dart';
 
 class CustomCard extends StatefulWidget {
   final String title;
   final String price;
   final String image;
-  final ProductModel product;
+  final dynamic product; // Accepts both ProductModel and ProductEntity
 
   const CustomCard({
     super.key,
@@ -34,8 +34,24 @@ class _CustomCardState extends State<CustomCard> {
   }
 
   void addToCart() {
-    final cart = Provider.of<CartProvider>(context, listen: false);
-    cart.addItem(widget.product);
+    ProductEntity productEntity;
+    if (widget.product is ProductEntity) {
+      productEntity = widget.product;
+    } else {
+      // Basic mapping if it's the old ProductModel
+      productEntity = ProductEntity(
+        id: widget.product.id,
+        title: widget.product.title ?? '',
+        description: widget.product.description ?? '',
+        price: widget.product.price ?? 0.0,
+        image: widget.product.imageUrl ?? '',
+        category: '',
+        rating: 0.0,
+        ratingCount: 0,
+      );
+    }
+
+    context.read<CartBloc>().add(AddToCart(CartItem(product: productEntity, quantity: 1)));
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -60,7 +76,6 @@ class _CustomCardState extends State<CustomCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---------------------- Stack للصورة + القلب ----------------------
           Stack(
             children: [
               Center(
@@ -78,8 +93,6 @@ class _CustomCardState extends State<CustomCard> {
                   ),
                 ),
               ),
-
-              // زر القلب في أعلى اليمين
               Positioned(
                 top: 8,
                 right: 8,
@@ -96,14 +109,11 @@ class _CustomCardState extends State<CustomCard> {
               ),
             ],
           ),
-
-          // ---------------------- التفاصيل ----------------------
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // اسم المنتج
                 Text(
                   widget.title.length > 30
                       ? '${widget.title.substring(0, 30)}...'
@@ -115,18 +125,8 @@ class _CustomCardState extends State<CustomCard> {
                     fontSize: 16,
                   ),
                 ),
-
                 const SizedBox(height: 6),
-
-                // وصف مختصر
-                Text(
-                  widget.product.description?.split(' ').first ?? '',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-
                 const SizedBox(height: 12),
-
-                // السعر + السلة
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -138,7 +138,7 @@ class _CustomCardState extends State<CustomCard> {
                       ),
                     ),
                     Text(
-                      '\$${widget.price}',
+                      widget.price,
                       style: const TextStyle(
                         color: Colors.teal,
                         fontSize: 16,

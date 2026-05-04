@@ -1,10 +1,8 @@
-// ignore_for_file: use_build_context_synchronously, unnecessary_underscores, unused_local_variable
-
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:store/features/auth/presentation/bloc/auth_event.dart';
 import 'package:store/screen/forgot_pass.dart';
 import 'package:store/widget/custom_btn.dart';
 import 'package:store/widget/custom_textfeld.dart';
@@ -22,14 +20,12 @@ class _WidgetLoginState extends State<WidgetLogin> {
 
   final ValueNotifier<bool> isEmailValid = ValueNotifier(false);
   bool isPasswordVisible = false;
-  bool isLoading = false;
   Timer? debounceTimer;
 
   @override
   void initState() {
     super.initState();
     emailController.addListener(validateEmailDebounced);
-    loadSavedLogin();
   }
 
   @override
@@ -46,73 +42,9 @@ class _WidgetLoginState extends State<WidgetLogin> {
     if (debounceTimer?.isActive ?? false) debounceTimer!.cancel();
     debounceTimer = Timer(const Duration(milliseconds: 300), () {
       final email = emailController.text.trim();
-      final valid = RegExp(r'^[\w-\.]+@gmail\.com$').hasMatch(email);
+      final valid = RegExp(r'^[\w-\.]+@[\w-]+\.[a-z]{2,4}$').hasMatch(email);
       isEmailValid.value = valid;
     });
-  }
-
-  Future<void> loadSavedLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    emailController.text = prefs.getString('saved_email') ?? '';
-    passwordController.text = prefs.getString('saved_password') ?? '';
-  }
-
-  Future<void> loginUser() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      showMessage('Please fill in all fields');
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      final authResult = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final user = authResult.user;
-      if (user == null) throw Exception("User is null after sign in");
-
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-
-      if (!doc.exists || doc.data() == null) {
-        await FirebaseAuth.instance.signOut();
-        showMessage('User data not found');
-        return;
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('saved_email', email);
-      await prefs.setString('saved_password', password);
-
-      if (!mounted) return;
-
-      Navigator.pushReplacementNamed(context, '/home', arguments: doc.data());
-    } on FirebaseAuthException catch (e) {
-      String msg = switch (e.code) {
-        'user-not-found' => 'Email is not registered',
-        'wrong-password' => 'Incorrect password',
-        'too-many-requests' => 'Too many login attempts. Try again later.',
-        _ => e.message ?? 'Login failed',
-      };
-
-      showMessage(msg);
-    } catch (_) {
-      showMessage('Unexpected error occurred');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
-  }
-
-  void showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -189,8 +121,7 @@ class _WidgetLoginState extends State<WidgetLogin> {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: () {
-                // في routes أو Navigator.push
-                var push = Navigator.push(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const ForgetPasswordPage()),
                 );
@@ -203,13 +134,18 @@ class _WidgetLoginState extends State<WidgetLogin> {
           ),
 
           const SizedBox(height: 20),
-          isLoading
-              ? const CircularProgressIndicator()
-              : CustomBtn(
-                  textbtn: 'Login',
-                  onPressed: (_) => loginUser(),
-                  data: const {},
-                ),
+          CustomBtn(
+            textbtn: 'Login',
+            onPressed: (_) {
+              context.read<AuthBloc>().add(
+                    LoginRequested(
+                      emailController.text.trim(),
+                      passwordController.text.trim(),
+                    ),
+                  );
+            },
+            data: const {},
+          ),
 
           const SizedBox(height: 15),
           Row(
