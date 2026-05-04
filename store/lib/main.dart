@@ -12,7 +12,7 @@ import 'package:store/screen/profile_page.dart';
 import 'package:store/screen/rgister_page.dart';
 import 'package:store/screen/splash_screen.dart';
 import 'package:store/screen/upload_product_page.dart';
-import 'package:store/widget/items_cart_product.dart';
+
 import 'package:store/presentation/pages/store_view.dart';
 
 void main() async {
