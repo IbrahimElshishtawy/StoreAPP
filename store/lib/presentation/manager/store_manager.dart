@@ -1,7 +1,6 @@
-// Placeholder for State Management - No logic yet.
-// In Clean Architecture, this would handle interaction between the
-// Presentation Layer and the Use Cases (Domain Layer).
+// State Management for Presentation Layer
+// Used to manage Store logic
 
 class StoreManager {
-  // TODO: Implement state management (e.g., Bloc, Riverpod, Provider)
+  // Logic goes here
 }
