@@ -13,6 +13,7 @@ import 'package:store/screen/rgister_page.dart';
 import 'package:store/screen/splash_screen.dart';
 import 'package:store/screen/upload_product_page.dart';
 import 'package:store/widget/items_cart_product.dart';
+import 'package:store/presentation/pages/store_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +30,9 @@ class Store extends StatelessWidget {
       providers: [ChangeNotifierProvider(create: (_) => CartProvider())],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        initialRoute: '/',
+        initialRoute: '/clinic_store',
         routes: {
+          '/clinic_store': (context) => const StoreView(),
           '/': (context) => const SplashScreen(),
           '/login': (context) => const LoginPage(),
           '/register': (context) => const RegisterPage(),
