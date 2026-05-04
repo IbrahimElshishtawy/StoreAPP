@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,7 +38,10 @@ class _SellerDashboardState extends State<SellerDashboard> {
                 children: [
                   _buildSummaryCards(stats),
                   const SizedBox(height: 24),
-                  const Text("Sales Overview", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Sales Overview",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 16),
                   _buildSalesChart(stats.dailySales),
                 ],
@@ -72,9 +77,15 @@ class _SellerDashboardState extends State<SellerDashboard> {
         ),
         child: Column(
           children: [
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),
@@ -91,7 +102,11 @@ class _SellerDashboardState extends State<SellerDashboard> {
           borderData: FlBorderData(show: true),
           lineBarsData: [
             LineChartBarData(
-              spots: dailySales.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList(),
+              spots: dailySales
+                  .asMap()
+                  .entries
+                  .map((e) => FlSpot(e.key.toDouble(), e.value))
+                  .toList(),
               isCurved: true,
               color: Colors.blue,
               barWidth: 4,
