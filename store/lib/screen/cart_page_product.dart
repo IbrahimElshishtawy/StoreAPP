@@ -60,6 +60,7 @@ class _CartPageState extends State<CartPage> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
+      if (!mounted) return;
       context.read<CartBloc>().add(ClearCart());
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -156,12 +157,12 @@ class _CartPageState extends State<CartPage> {
                                     width: 60,
                                     height: 60,
                                     fit: BoxFit.cover,
-                                    placeholder: (_, __) => const SizedBox(
+                                    placeholder: (context, url) => const SizedBox(
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(),
                                     ),
-                                    errorWidget: (_, __, ___) => const Icon(
+                                    errorWidget: (context, url, error) => const Icon(
                                       Icons.broken_image,
                                       size: 40,
                                     ),

@@ -12,12 +12,18 @@ import 'package:store/screen/profile_page.dart';
 import 'package:store/screen/rgister_page.dart';
 import 'package:store/screen/splash_screen.dart';
 import 'package:store/screen/upload_product_page.dart';
-import 'package:store/widget/items_cart_product.dart';
 import 'package:store/presentation/pages/store_view.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/core/injection/injection_container.dart' as di;
+import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:store/features/products/presentation/bloc/product_bloc.dart';
+import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await di.init();
   runApp(const Store());
 }
 
@@ -26,8 +32,13 @@ class Store extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => CartProvider())],
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider<CartBloc>(create: (_) => di.sl<CartBloc>()),
+        BlocProvider<ProductBloc>(create: (_) => di.sl<ProductBloc>()),
+        BlocProvider<SellerBloc>(create: (_) => di.sl<SellerBloc>()),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         initialRoute: '/clinic_store',

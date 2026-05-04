@@ -1,22 +1,21 @@
-import 'package:store/features/products/domain/entities/product_entity.dart';
 import 'package:store/features/cart/domain/entities/cart_item.dart';
 
 abstract class CartEvent {}
 
 class AddToCart extends CartEvent {
-  final ProductEntity product;
-  AddToCart(this.product);
+  final CartItem item;
+  AddToCart(this.item);
 }
 
 class RemoveFromCart extends CartEvent {
-  final CartItem item;
-  RemoveFromCart(this.item);
+  final String productId;
+  RemoveFromCart(this.productId);
 }
 
 class UpdateQuantity extends CartEvent {
-  final CartItem item;
+  final String productId;
   final int quantity;
-  UpdateQuantity(this.item, this.quantity);
+  UpdateQuantity(this.productId, this.quantity);
 }
 
 class ClearCart extends CartEvent {}

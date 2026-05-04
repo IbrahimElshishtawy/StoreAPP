@@ -88,7 +88,7 @@ class _CustomCardState extends State<CustomCard> {
                     height: 100,
                     width: 80,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) =>
+                    errorBuilder: (context, error, stackTrace) =>
                         const Icon(Icons.broken_image, size: 40),
                   ),
                 ),
