@@ -138,11 +138,11 @@ class _WidgetLoginState extends State<WidgetLogin> {
             textbtn: 'Login',
             onPressed: (_) async {
               context.read<AuthBloc>().add(
-                    LoginRequested(
-                      emailController.text.trim(),
-                      passwordController.text.trim(),
-                    ),
-                  );
+                LoginRequested(
+                  emailController.text.trim(),
+                  passwordController.text.trim(),
+                ),
+              );
             },
             data: const {},
           ),
