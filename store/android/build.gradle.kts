@@ -21,7 +21,7 @@ tasks.register<Delete>("clean") {
 }
 
 subprojects {
-    val configureNamespace = { subproj: Project ->
+    val configureAndroid = { subproj: Project ->
         val androidExt = subproj.extensions.findByName("android")
         if (androidExt != null) {
             try {
@@ -36,6 +36,12 @@ subprojects {
                     }
                     setNamespace.invoke(androidExt, targetNamespace)
                 }
+
+                val compileOptions = clazz.getMethod("getCompileOptions").invoke(androidExt)
+                val setSourceCompatibility = compileOptions.javaClass.getMethod("setSourceCompatibility", JavaVersion::class.java)
+                val setTargetCompatibility = compileOptions.javaClass.getMethod("setTargetCompatibility", JavaVersion::class.java)
+                setSourceCompatibility.invoke(compileOptions, JavaVersion.VERSION_11)
+                setTargetCompatibility.invoke(compileOptions, JavaVersion.VERSION_11)
             } catch (e: Exception) {
                 // Ignore
             }
@@ -43,10 +49,23 @@ subprojects {
     }
 
     if (project.state.executed) {
-        configureNamespace(this)
+        configureAndroid(this)
     } else {
         project.afterEvaluate {
-            configureNamespace(this)
+            configureAndroid(this)
+        }
+    }
+
+    project.tasks.withType<JavaCompile>().configureEach {
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
+    }
+    project.tasks.configureEach {
+        if (name.contains("compile") && name.contains("Kotlin")) {
+            try {
+                val kotlinOptions = javaClass.getMethod("getKotlinOptions").invoke(this)
+                kotlinOptions.javaClass.getMethod("setJvmTarget", String::class.java).invoke(kotlinOptions, "11")
+            } catch (e: Exception) {}
         }
     }
 }
