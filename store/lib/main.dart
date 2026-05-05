@@ -1,4 +1,6 @@
 // ignore_for_file: unused_local_variable
+import 'package:flutter/foundation.dart';
+import 'package:store/core/seed/seed_fake_user.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +26,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await di.init();
+
+  // ─── إنشاء مستخدمين وهميين مرة واحدة فقط ───
+  // بعد ما تشتغل التطبيق وتتأكد إن الأكونتات اتعملت، احذف السطرين دول
+  if (kDebugMode) {
+    await FakeUserSeeder.seedUsers();
+  }
+  // ──────────────────────────────────────────
+
   runApp(const Store());
 }
 
