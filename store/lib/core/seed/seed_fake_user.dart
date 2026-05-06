@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 /// -----------------------------------------------
 /// Fake / Demo Users Seeder
@@ -59,24 +60,42 @@ class FakeUserSeeder {
         // تسجيل الخروج بعد كل مستخدم
         await _auth.signOut();
 
-        print('✅ تم إنشاء المستخدم: ${userData['email']}');
+        if (kDebugMode) {
+          print('✅ تم إنشاء المستخدم: ${userData['email']}');
+        }
       } on FirebaseAuthException catch (e) {
         if (e.code == 'email-already-in-use') {
-          print('⚠️ المستخدم موجود مسبقاً: ${userData['email']}');
+          if (kDebugMode) {
+            print('⚠️ المستخدم موجود مسبقاً: ${userData['email']}');
+          }
         } else {
-          print('❌ خطأ عند إنشاء ${userData['email']}: ${e.message}');
+          if (kDebugMode) {
+            print('❌ خطأ عند إنشاء ${userData['email']}: ${e.message}');
+          }
         }
       } catch (e) {
-        print('❌ خطأ غير متوقع: $e');
+        if (kDebugMode) {
+          print('❌ خطأ غير متوقع: $e');
+        }
       }
     }
 
-    print('\n--- بيانات تسجيل الدخول ---');
+    if (kDebugMode) {
+      print('\n--- بيانات تسجيل الدخول ---');
+    }
     for (final u in _fakeUsers) {
-      print('👤 ${u['firstName']} ${u['lastName']}');
-      print('   Email:    ${u['email']}');
-      print('   Password: ${u['password']}');
-      print('');
+      if (kDebugMode) {
+        print('👤 ${u['firstName']} ${u['lastName']}');
+      }
+      if (kDebugMode) {
+        print('   Email:    ${u['email']}');
+      }
+      if (kDebugMode) {
+        print('   Password: ${u['password']}');
+      }
+      if (kDebugMode) {
+        print('');
+      }
     }
   }
 }

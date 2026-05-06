@@ -27,7 +27,7 @@ final List<DummyProduct> dummyProducts = [
     description: 'A beautiful white ceramic vase for premium boutique styling.',
     price: 49.99,
     originalPrice: 65.00,
-    imageUrl: 'https://images.unsplash.com/photo-1581783342308-f792db84ee4a?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&q=80&w=600',
     hasVr: true,
     dealTag: 'Best Value',
   ),
