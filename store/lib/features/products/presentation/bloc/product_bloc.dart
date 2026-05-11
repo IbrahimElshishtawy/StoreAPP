@@ -29,6 +29,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
       final filtered = _allProducts.where((p) {
         final matchQuery = p.title.toLowerCase().contains(event.query.toLowerCase());
+        // Add more filters if needed
         return matchQuery;
       }).toList();
 
