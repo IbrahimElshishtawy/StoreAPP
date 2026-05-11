@@ -11,11 +11,21 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<Either<Failure, List<ProductEntity>>> getProducts() async {
-    return const Right([]);
+    try {
+      final remoteProducts = await remoteDataSource.getProducts();
+      return Right(remoteProducts);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
   Future<Either<Failure, List<ProductEntity>>> getProductsByCategory(String category) async {
-    return const Right([]);
+    try {
+      final remoteProducts = await remoteDataSource.getProductsByCategory(category);
+      return Right(remoteProducts);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

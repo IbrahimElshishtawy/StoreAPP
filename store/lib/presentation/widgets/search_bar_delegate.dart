@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/products/presentation/bloc/product_bloc.dart';
+import 'package:store/features/products/presentation/bloc/product_event.dart';
 
 class PersistentSearchBarDelegate extends SliverPersistentHeaderDelegate {
   /// Fixed total height of the search bar (content only, no top padding)
@@ -23,10 +26,13 @@ class PersistentSearchBarDelegate extends SliverPersistentHeaderDelegate {
                 children: [
                   Icon(Icons.search, color: Colors.grey.shade600),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search boutique, clinics...',
+                      onChanged: (query) {
+                        context.read<ProductBloc>().add(SearchProductsRequested(query));
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Search products...',
                         hintStyle: TextStyle(color: Colors.grey, fontSize: 15),
                         border: InputBorder.none,
                       ),
@@ -62,4 +68,3 @@ class PersistentSearchBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
 }
-

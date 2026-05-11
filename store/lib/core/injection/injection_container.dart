@@ -15,6 +15,8 @@ import 'package:store/features/products/domain/repositories/product_repository.d
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/core/theme/theme_cubit.dart';
+import 'package:store/core/network/payment_service.dart';
 
 final sl = GetIt.instance;
 
@@ -53,4 +55,10 @@ Future<void> init() async {
 
   // Features - Seller
   sl.registerFactory(() => SellerBloc());
+
+  // Core - Theme
+  sl.registerFactory(() => ThemeCubit(sl()));
+
+  // Services
+  sl.registerLazySingleton(() => PaymentService());
 }
