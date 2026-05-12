@@ -1,10 +1,6 @@
-import 'package:equatable/equatable.dart';
 import 'package:store/features/auth/domain/entities/user_entity.dart';
 
-abstract class AuthState extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+abstract class AuthState {}
 
 class AuthInitial extends AuthState {}
 
@@ -13,8 +9,6 @@ class AuthLoading extends AuthState {}
 class Authenticated extends AuthState {
   final UserEntity user;
   Authenticated(this.user);
-  @override
-  List<Object?> get props => [user];
 }
 
 class Unauthenticated extends AuthState {}
@@ -22,6 +16,9 @@ class Unauthenticated extends AuthState {}
 class AuthError extends AuthState {
   final String message;
   AuthError(this.message);
-  @override
-  List<Object?> get props => [message];
+}
+
+class TwoFactorAuthRequired extends AuthState {
+  final String verificationId;
+  TwoFactorAuthRequired(this.verificationId);
 }

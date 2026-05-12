@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:store/core/seed/seed_fake_user.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:store/core/theme/theme_cubit.dart';
 import 'package:store/models/customs_userid.dart';
 import 'package:store/screen/cart_page_product.dart';
 import 'package:store/screen/edit_profile_page.dart';
@@ -27,12 +27,9 @@ void main() async {
   await Firebase.initializeApp();
   await di.init();
 
-  // ─── إنشاء مستخدمين وهميين مرة واحدة فقط ───
-  // بعد ما تشتغل التطبيق وتتأكد إن الأكونتات اتعملت، احذف السطرين دول
   if (kDebugMode) {
     await FakeUserSeeder.seedUsers();
   }
-  // ──────────────────────────────────────────
 
   runApp(const Store());
 }
@@ -48,28 +45,44 @@ class Store extends StatelessWidget {
         BlocProvider<CartBloc>(create: (_) => di.sl<CartBloc>()),
         BlocProvider<ProductBloc>(create: (_) => di.sl<ProductBloc>()),
         BlocProvider<SellerBloc>(create: (_) => di.sl<SellerBloc>()),
+        BlocProvider<ThemeCubit>(create: (_) => di.sl<ThemeCubit>()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        initialRoute: '/clinic_store',
-        routes: {
-          '/clinic_store': (context) => const StoreView(),
-          '/': (context) => const SplashScreen(),
-          '/login': (context) => const LoginPage(),
-          '/register': (context) => const RegisterPage(),
-          '/home': (context) => const HomePage(),
-          '/upload': (context) => const UploadProductPage(),
-          '/cart': (context) => const CartPage(),
-          '/orders': (context) => const MyProductsPage(),
-        },
-        onGenerateRoute: (settings) {
-          if (settings.name == '/editProfile') {
-            final user = settings.arguments as UserProfile;
-            return MaterialPageRoute(
-              builder: (_) => EditProfilePage(user: user),
-            );
-          }
-          return null;
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Clinic Store',
+            themeMode: themeMode,
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+              useMaterial3: true,
+              brightness: Brightness.light,
+            ),
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              useMaterial3: true,
+            ),
+            initialRoute: '/clinic_store',
+            routes: {
+              '/clinic_store': (context) => const StoreView(),
+              '/': (context) => const SplashScreen(),
+              '/login': (context) => const LoginPage(),
+              '/register': (context) => const RegisterPage(),
+              '/home': (context) => const HomePage(),
+              '/upload': (context) => const UploadProductPage(),
+              '/cart': (context) => const CartPage(),
+              '/orders': (context) => const MyProductsPage(),
+            },
+            onGenerateRoute: (settings) {
+              if (settings.name == '/editProfile') {
+                final user = settings.arguments as UserProfile;
+                return MaterialPageRoute(
+                  builder: (_) => EditProfilePage(user: user),
+                );
+              }
+              return null;
+            },
+          );
         },
       ),
     );
