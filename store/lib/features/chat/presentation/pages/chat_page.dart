@@ -1,65 +1,76 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:store/features/chat/domain/entities/chat_message.dart';
 
 class ChatPage extends StatefulWidget {
-  final String? otherUserId; // If null, it's a support chat
-  const ChatPage({super.key, this.otherUserId});
+  final String peerId;
+  final String peerName;
+
+  const ChatPage({
+    super.key,
+    required this.peerId,
+    required this.peerName,
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final TextEditingController _controller = TextEditingController();
-  final String _currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  final TextEditingController _messageController = TextEditingController();
 
-  String get _chatId {
-    if (widget.otherUserId == null) return "support_$_currentUserId";
-    List<String> ids = [_currentUserId, widget.otherUserId!];
-    ids.sort();
-    return ids.join("_");
+  @override
+  void initState() {
+    super.initState();
+    context.read<ChatBloc>().add(GetMessagesRequested(widget.peerId));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.otherUserId == null ? "Live Support" : "Chat")),
+      appBar: AppBar(title: Text(widget.peerName)),
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('chats')
-                  .doc(_chatId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final docs = snapshot.data!.docs;
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final data = docs[index].data() as Map<String, dynamic>;
-                    final message = ChatMessage.fromFirestore(data, docs[index].id);
-                    final isMe = message.senderId == _currentUserId;
-                    return Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.all(8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isMe ? Colors.blue : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(15),
+            child: BlocBuilder<ChatBloc, ChatState>(
+              builder: (context, state) {
+                if (state is ChatLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is ChatLoaded) {
+                  final messages = state.messages;
+                  if (messages.isEmpty) {
+                    return const Center(child: Text('No messages yet'));
+                  }
+                  return ListView.builder(
+                    reverse: true,
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final message = messages[index];
+                      final isMe = message.senderId != widget.peerId;
+                      return Align(
+                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isMe ? Colors.blue : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            message.text,
+                            style: TextStyle(color: isMe ? Colors.white : Colors.black),
+                          ),
                         ),
-                        child: Text(message.text, style: TextStyle(color: isMe ? Colors.white : Colors.black)),
-                      ),
-                    );
-                  },
-                );
+                      );
+                    },
+                  );
+                }
+                if (state is ChatError) {
+                  return Center(child: Text(state.message));
+                }
+                return const SizedBox.shrink();
               },
             ),
           ),
@@ -69,26 +80,19 @@ class _ChatPageState extends State<ChatPage> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(hintText: "Enter message..."),
+                    controller: _messageController,
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
                   onPressed: () {
-                    if (_controller.text.trim().isNotEmpty) {
-                      final message = ChatMessage(
-                        id: '',
-                        senderId: _currentUserId,
-                        text: _controller.text.trim(),
-                        timestamp: DateTime.now(),
-                      );
-                      FirebaseFirestore.instance
-                          .collection('chats')
-                          .doc(_chatId)
-                          .collection('messages')
-                          .add(message.toFirestore());
-                      _controller.clear();
+                    if (_messageController.text.isNotEmpty) {
+                      context.read<ChatBloc>().add(SendMessageRequested(widget.peerId, _messageController.text));
+                      _messageController.clear();
                     }
                   },
                 ),

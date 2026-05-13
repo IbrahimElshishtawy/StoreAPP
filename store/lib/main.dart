@@ -21,11 +21,16 @@ import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/payment/presentation/bloc/payment_bloc.dart';
+import 'package:store/features/payment/presentation/pages/checkout_page.dart';
+import 'package:store/core/util/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await di.init();
+
+  await NotificationService().initialize();
 
   // ─── إنشاء مستخدمين وهميين مرة واحدة فقط ───
   // بعد ما تشتغل التطبيق وتتأكد إن الأكونتات اتعملت، احذف السطرين دول
@@ -48,6 +53,7 @@ class Store extends StatelessWidget {
         BlocProvider<CartBloc>(create: (_) => di.sl<CartBloc>()),
         BlocProvider<ProductBloc>(create: (_) => di.sl<ProductBloc>()),
         BlocProvider<SellerBloc>(create: (_) => di.sl<SellerBloc>()),
+        BlocProvider<PaymentBloc>(create: (_) => di.sl<PaymentBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -61,6 +67,7 @@ class Store extends StatelessWidget {
           '/upload': (context) => const UploadProductPage(),
           '/cart': (context) => const CartPage(),
           '/orders': (context) => const MyProductsPage(),
+          '/checkout': (context) => const CheckoutPage(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/editProfile') {

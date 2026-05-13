@@ -1,11 +1,10 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
+import 'package:store/features/seller/domain/entities/seller_stats.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -44,6 +43,13 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   ),
                   const SizedBox(height: 16),
                   _buildSalesChart(stats.dailySales),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, '/upload'),
+                    icon: const Icon(Icons.add),
+                    label: const Text("Upload New Product"),
+                    style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+                  ),
                 ],
               ),
             );
@@ -56,12 +62,12 @@ class _SellerDashboardState extends State<SellerDashboard> {
     );
   }
 
-  Widget _buildSummaryCards(dynamic stats) {
+  Widget _buildSummaryCards(SellerStats stats) {
     return Row(
       children: [
         _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
         const SizedBox(width: 16),
-        _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
+        _buildStatCard("Orders", "${stats.ordersCount}", Colors.blue),
       ],
     );
   }
@@ -92,7 +98,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
     );
   }
 
-  Widget _buildSalesChart(List<double> dailySales) {
+  Widget _buildSalesChart(List<DailySales> dailySales) {
     return SizedBox(
       height: 200,
       child: LineChart(
@@ -105,7 +111,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               spots: dailySales
                   .asMap()
                   .entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value))
+                  .map((e) => FlSpot(e.key.toDouble(), e.value.amount))
                   .toList(),
               isCurved: true,
               color: Colors.blue,
