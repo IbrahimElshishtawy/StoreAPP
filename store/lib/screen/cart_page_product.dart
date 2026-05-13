@@ -18,6 +18,7 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   bool isLoading = false;
+  final TextEditingController _couponController = TextEditingController();
 
   Future<void> placeOrder(BuildContext context, CartState state) async {
     if (state.items.isEmpty) {
@@ -56,7 +57,7 @@ class _CartPageState extends State<CartPage> {
         'orderId': orderRef.id,
         'userId': user.uid,
         'items': items,
-        'totalPrice': state.totalAmount,
+        'totalPrice': state.total,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -156,7 +157,7 @@ class _CartPageState extends State<CartPage> {
                                     imageUrl: product.image,
                                     width: 60,
                                     height: 60,
-                                    fit: BoxFit.cover,
+                                    fit: BoxFit.contain,
                                     placeholder: (context, url) => const SizedBox(
                                       width: 20,
                                       height: 20,
@@ -244,6 +245,29 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
                       Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _couponController,
+                                decoration: const InputDecoration(
+                                  hintText: "Enter Coupon (e.g. DISCOUNT10)",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                context.read<CartBloc>().add(ApplyCoupon(_couponController.text));
+                              },
+                              child: const Text("Apply"),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
@@ -255,6 +279,31 @@ class _CartPageState extends State<CartPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
+                                  'Subtotal:',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                Text('\$${state.subtotal.toStringAsFixed(2)}'),
+                              ],
+                            ),
+                            if (state.discount > 0)
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Discount (${(state.discount * 100).toInt()}%):',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                  Text(
+                                    '-\$${(state.subtotal * state.discount).toStringAsFixed(2)}',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            const Divider(),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
                                   'Total:',
                                   style: TextStyle(
                                     fontSize: 18,
@@ -262,7 +311,7 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
                                 Text(
-                                  '\$${state.totalAmount.toStringAsFixed(2)}',
+                                  '\$${state.total.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,

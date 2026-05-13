@@ -6,8 +6,23 @@ class DioClient {
   final SharedPreferences sharedPreferences;
 
   DioClient(this.dio, this.sharedPreferences) {
-    dio.options.baseUrl = 'https://api.example.com';
-    dio.options.connectTimeout = const Duration(seconds: 10);
-    dio.options.receiveTimeout = const Duration(seconds: 10);
+    dio.options.baseUrl = 'https://fakestoreapi.com';
+    dio.options.connectTimeout = const Duration(seconds: 20);
+    dio.options.receiveTimeout = const Duration(seconds: 20);
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = sharedPreferences.getString('jwt_token');
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+        onError: (DioException e, handler) {
+          return handler.next(e);
+        },
+      ),
+    );
   }
 }

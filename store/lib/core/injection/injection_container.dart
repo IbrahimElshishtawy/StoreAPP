@@ -15,6 +15,7 @@ import 'package:store/features/products/domain/repositories/product_repository.d
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/core/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -41,7 +42,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
   sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
-  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(sl(), sl()));
+  sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(sl(), sl(), sl()));
 
   // Features - Products
   sl.registerFactory(() => ProductBloc(sl()));
@@ -53,4 +54,7 @@ Future<void> init() async {
 
   // Features - Seller
   sl.registerFactory(() => SellerBloc());
+
+  // Core - Theme
+  sl.registerFactory(() => ThemeCubit());
 }

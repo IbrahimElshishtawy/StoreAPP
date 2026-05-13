@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Placeholder widget test', () {
+  test('Placeholder integration test', () {
     expect(1 + 1, 2);
   });
 }

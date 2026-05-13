@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:store/features/auth/data/models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -12,12 +13,17 @@ abstract class AuthRemoteDataSource {
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth firebaseAuth;
   final FirebaseFirestore firestore;
+  final SharedPreferences sharedPreferences;
 
-  AuthRemoteDataSourceImpl(this.firebaseAuth, this.firestore);
+  AuthRemoteDataSourceImpl(this.firebaseAuth, this.firestore, this.sharedPreferences);
 
   @override
   Future<UserModel> login(String email, String password) async {
     final credential = await firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+    final idToken = await credential.user!.getIdToken();
+    if (idToken != null) {
+      await sharedPreferences.setString('jwt_token', idToken);
+    }
     final userDoc = await firestore.collection('users').doc(credential.user!.uid).get();
     return UserModel.fromFirestore(userDoc.data()!, credential.user!.uid);
   }
@@ -25,6 +31,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> register(String email, String password, String firstName, String lastName) async {
     final credential = await firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
+    final idToken = await credential.user!.getIdToken();
+    if (idToken != null) {
+      await sharedPreferences.setString('jwt_token', idToken);
+    }
     final userModel = UserModel(
       id: credential.user!.uid,
       email: email,
@@ -38,6 +48,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     await firebaseAuth.signOut();
+    await sharedPreferences.remove('jwt_token');
   }
 
   @override

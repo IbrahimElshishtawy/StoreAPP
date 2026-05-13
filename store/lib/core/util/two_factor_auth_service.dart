@@ -1,30 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'dart:math';
 
 class TwoFactorAuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String? _currentCode;
 
-  Future<void> verifyPhoneNumber(
-    String phoneNumber,
-    Function(PhoneAuthCredential) verificationCompleted,
-    Function(FirebaseAuthException) verificationFailed,
-    Function(String, int?) codeSent,
-    Function(String) codeAutoRetrievalTimeout,
-  ) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: verificationCompleted,
-      verificationFailed: verificationFailed,
-      codeSent: codeSent,
-      codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
-    );
+  Future<String> generateCode() async {
+    _currentCode = (Random().nextInt(900000) + 100000).toString();
+    print("2FA Code Generated: $_currentCode");
+    return _currentCode!;
   }
 
-  Future<UserCredential> signInWithCode(String verificationId, String smsCode) async {
-    PhoneAuthCredential credential = PhoneAuthProvider.credential(
-      verificationId: verificationId,
-      smsCode: smsCode,
-    );
-    return await _auth.signInWithCredential(credential);
+  bool verifyCode(String code) {
+    return _currentCode == code;
   }
 }

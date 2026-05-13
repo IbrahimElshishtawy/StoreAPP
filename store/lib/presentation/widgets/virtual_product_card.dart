@@ -1,10 +1,8 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
-import '../models/dummy_product.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class VirtualProductCard extends StatelessWidget {
-  final DummyProduct product;
+  final ProductEntity product;
   final VoidCallback onVrTap;
 
   const VirtualProductCard({
@@ -17,7 +15,7 @@ class VirtualProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -30,7 +28,6 @@ class VirtualProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image Section
           Expanded(
             flex: 4,
             child: Stack(
@@ -43,73 +40,38 @@ class VirtualProductCard extends StatelessWidget {
                     color: const Color(0xFFF5F7FA),
                     image: DecorationImage(
                       image: NetworkImage(product.imageUrl),
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
-                if (product.dealTag != null)
-                  Positioned(
-                    top: 12,
-                    left: 12,
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: GestureDetector(
+                    onTap: onVrTap,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(
-                          0xFFE53935,
-                        ), // Red highlight for best value
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFE53935).withOpacity(0.3),
+                            color: Colors.black.withOpacity(0.1),
                             blurRadius: 8,
-                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                      child: Text(
-                        product.dealTag!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
+                      child: const Icon(
+                        Icons.view_in_ar,
+                        color: Color(0xFF0A192F),
+                        size: 18,
                       ),
                     ),
                   ),
-                if (product.hasVr)
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: GestureDetector(
-                      onTap: onVrTap,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.view_in_ar,
-                          color: Color(0xFF0A192F),
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ),
+                ),
               ],
             ),
           ),
-          // Details Section
           Expanded(
             flex: 3,
             child: Padding(
@@ -122,18 +84,17 @@ class VirtualProductCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        product.name,
+                        product.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF0A192F),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        product.description,
+                        product.category,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -144,29 +105,24 @@ class VirtualProductCard extends StatelessWidget {
                     ],
                   ),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '\$${product.price.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0A192F),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      if (product.originalPrice != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2.0),
-                          child: Text(
-                            '\$${product.originalPrice!.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                              decoration: TextDecoration.lineThrough,
-                            ),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          Text(
+                            ' ${product.rating}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                           ),
-                        ),
+                        ],
+                      ),
                     ],
                   ),
                 ],

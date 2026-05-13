@@ -1,10 +1,8 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
-import '../models/dummy_product.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class ProductVirtualView extends StatefulWidget {
-  final DummyProduct product;
+  final ProductEntity product;
 
   const ProductVirtualView({super.key, required this.product});
 
@@ -43,18 +41,15 @@ class _ProductVirtualViewState extends State<ProductVirtualView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E293B), // Dark immersive background
+      backgroundColor: const Color(0xFF1E293B),
       body: Stack(
         children: [
-          // Simulated 3D Room Grid Background
           Positioned.fill(
             child: Opacity(
               opacity: 0.1,
               child: CustomPaint(painter: GridPainter()),
             ),
           ),
-
-          // Virtual Product Interactive Area
           Center(
             child: GestureDetector(
               onPanUpdate: (details) {
@@ -69,7 +64,7 @@ class _ProductVirtualViewState extends State<ProductVirtualView>
                   return Transform(
                     alignment: FractionalOffset.center,
                     transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.001) // perspective
+                      ..setEntry(3, 2, 0.001)
                       ..rotateX(_panY + _rotationX.value)
                       ..rotateY(_panX + _rotationY.value),
                     child: Container(
@@ -91,11 +86,13 @@ class _ProductVirtualViewState extends State<ProductVirtualView>
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.network(
-                              widget.product.imageUrl,
-                              fit: BoxFit.cover,
+                            Container(
+                              color: Colors.white,
+                              child: Image.network(
+                                widget.product.imageUrl,
+                                fit: BoxFit.contain,
+                              ),
                             ),
-                            // Glassmorphism overlay
                             Container(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
@@ -117,8 +114,6 @@ class _ProductVirtualViewState extends State<ProductVirtualView>
               ),
             ),
           ),
-
-          // UI Overlay
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -178,8 +173,6 @@ class _ProductVirtualViewState extends State<ProductVirtualView>
               ),
             ),
           ),
-
-          // Bottom instructions
           Positioned(
             bottom: 40,
             left: 0,
@@ -212,20 +205,16 @@ class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
-      ..color = Colors.white
+      ..color = Colors.white.withOpacity(0.2)
       ..strokeWidth = 1.0;
-
     double step = 40.0;
-
     for (double i = 0; i < size.width; i += step) {
       canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
     }
-
     for (double i = 0; i < size.height; i += step) {
       canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
     }
   }
-
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

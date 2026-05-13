@@ -43,5 +43,20 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         (products) => emit(ProductLoaded(products)),
       );
     });
+
+    on<FilterProductsRequested>((event, emit) async {
+       if (_allProducts.isEmpty) {
+         final result = await repository.getProducts();
+         result.fold((_)=>{}, (products) => _allProducts = products);
+      }
+
+      final filtered = _allProducts.where((p) {
+        final matchPrice = p.price >= event.minPrice && p.price <= event.maxPrice;
+        final matchRating = p.rating >= event.minRating;
+        return matchPrice && matchRating;
+      }).toList();
+
+      emit(ProductLoaded(filtered));
+    });
   }
 }
