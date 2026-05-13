@@ -16,7 +16,11 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
         (failure) => emit(ProductError(failure.message)),
         (products) {
           _allProducts = products;
-          emit(ProductLoaded(products));
+          if (products.isEmpty) {
+            emit(ProductEmpty());
+          } else {
+            emit(ProductLoaded(products));
+          }
         },
       );
     });
@@ -29,10 +33,19 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
       final filtered = _allProducts.where((p) {
         final matchQuery = p.title.toLowerCase().contains(event.query.toLowerCase());
-        return matchQuery;
+        final matchCategory = event.category == null || p.category == event.category;
+        final matchMinPrice = event.minPrice == null || p.price >= event.minPrice!;
+        final matchMaxPrice = event.maxPrice == null || p.price <= event.maxPrice!;
+        final matchRating = event.minRating == null || p.rating >= event.minRating!;
+
+        return matchQuery && matchCategory && matchMinPrice && matchMaxPrice && matchRating;
       }).toList();
 
-      emit(ProductLoaded(filtered));
+      if (filtered.isEmpty) {
+        emit(ProductEmpty());
+      } else {
+        emit(ProductLoaded(filtered));
+      }
     });
 
     on<GetProductsByCategoryRequested>((event, emit) async {
@@ -40,7 +53,7 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
       final result = await repository.getProductsByCategory(event.category);
       result.fold(
         (failure) => emit(ProductError(failure.message)),
-        (products) => emit(ProductLoaded(products)),
+        (products) => products.isEmpty ? emit(ProductEmpty()) : emit(ProductLoaded(products)),
       );
     });
   }

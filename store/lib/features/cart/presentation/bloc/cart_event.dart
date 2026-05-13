@@ -18,4 +18,9 @@ class UpdateQuantity extends CartEvent {
   UpdateQuantity(this.productId, this.quantity);
 }
 
+class ApplyDiscountCode extends CartEvent {
+  final String code;
+  ApplyDiscountCode(this.code);
+}
+
 class ClearCart extends CartEvent {}

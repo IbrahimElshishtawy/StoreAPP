@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:store/core/network/dio_client.dart';
+import 'package:store/core/util/two_factor_auth_service.dart';
+import 'package:store/core/util/push_notification_service.dart';
 import 'package:store/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:store/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:store/features/auth/domain/repositories/auth_repository.dart';
@@ -15,6 +17,7 @@ import 'package:store/features/products/domain/repositories/product_repository.d
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/core/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -28,6 +31,9 @@ Future<void> init() async {
 
   // Core
   sl.registerLazySingleton(() => DioClient(sl(), sl()));
+  sl.registerLazySingleton(() => TwoFactorAuthService());
+  sl.registerLazySingleton(() => PushNotificationService());
+  sl.registerFactory(() => ThemeCubit());
 
   // Features - Auth
   sl.registerFactory(() => AuthBloc(
@@ -35,6 +41,7 @@ Future<void> init() async {
         registerUseCase: sl(),
         logoutUseCase: sl(),
         getCurrentUserUseCase: sl(),
+        twoFactorAuthService: sl(),
       ));
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));

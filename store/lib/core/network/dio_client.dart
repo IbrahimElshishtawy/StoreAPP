@@ -9,5 +9,21 @@ class DioClient {
     dio.options.baseUrl = 'https://api.example.com';
     dio.options.connectTimeout = const Duration(seconds: 10);
     dio.options.receiveTimeout = const Duration(seconds: 10);
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = sharedPreferences.getString('jwt_token');
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+        onError: (DioException e, handler) {
+          // Handle global errors here
+          return handler.next(e);
+        },
+      ),
+    );
   }
 }
