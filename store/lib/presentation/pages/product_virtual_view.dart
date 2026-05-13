@@ -1,6 +1,13 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
+import 'package:ar_flutter_plugin_2/ar_flutter_plugin.dart';
+import 'package:ar_flutter_plugin_2/datatypes/node_types.dart';
+import 'package:ar_flutter_plugin_2/datatypes/config_planedetection.dart';
+import 'package:ar_flutter_plugin_2/managers/ar_anchor_manager.dart';
+import 'package:ar_flutter_plugin_2/managers/ar_location_manager.dart';
+import 'package:ar_flutter_plugin_2/managers/ar_object_manager.dart';
+import 'package:ar_flutter_plugin_2/managers/ar_session_manager.dart';
+import 'package:ar_flutter_plugin_2/models/ar_node.dart';
+import 'package:vector_math/vector_math_64.dart' as vector;
 import '../models/dummy_product.dart';
 
 class ProductVirtualView extends StatefulWidget {
@@ -12,220 +19,125 @@ class ProductVirtualView extends StatefulWidget {
   State<ProductVirtualView> createState() => _ProductVirtualViewState();
 }
 
-class _ProductVirtualViewState extends State<ProductVirtualView>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _rotationY;
-  late Animation<double> _rotationX;
-
-  double _panX = 0;
-  double _panY = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
-    _rotationY = Tween<double>(begin: 0, end: 3.14159 * 2).animate(_controller);
-    _rotationX = Tween<double>(begin: -0.1, end: 0.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
-    );
-  }
+class _ProductVirtualViewState extends State<ProductVirtualView> {
+  ARSessionManager? arSessionManager;
+  ARObjectManager? arObjectManager;
+  ARNode? localObjectNode;
 
   @override
   void dispose() {
-    _controller.dispose();
+    arSessionManager?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1E293B), // Dark immersive background
+      appBar: AppBar(
+        title: Text("${widget.product.name} AR View"),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
       body: Stack(
         children: [
-          // Simulated 3D Room Grid Background
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.1,
-              child: CustomPaint(painter: GridPainter()),
-            ),
+          ARView(
+            onARViewCreated: onARViewCreated,
+            planeDetectionConfig: PlaneDetectionConfig.horizontalAndVertical,
           ),
-
-          // Virtual Product Interactive Area
-          Center(
-            child: GestureDetector(
-              onPanUpdate: (details) {
-                setState(() {
-                  _panX += details.delta.dx * 0.01;
-                  _panY += details.delta.dy * 0.01;
-                });
-              },
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Transform(
-                    alignment: FractionalOffset.center,
-                    transform: Matrix4.identity()
-                      ..setEntry(3, 2, 0.001) // perspective
-                      ..rotateX(_panY + _rotationX.value)
-                      ..rotateY(_panX + _rotationY.value),
-                    child: Container(
-                      width: 280,
-                      height: 380,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 40,
-                            spreadRadius: -10,
-                            offset: const Offset(0, 20),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.network(
-                              widget.product.imageUrl,
-                              fit: BoxFit.cover,
-                            ),
-                            // Glassmorphism overlay
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Colors.white.withOpacity(0.2),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-
-          // UI Overlay
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16.0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.threed_rotation,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          '360° View',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Bottom instructions
           Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+            bottom: 30,
+            left: 20,
+            right: 20,
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    "Point camera at a flat surface and tap 'Place' to see the product",
+                    style: TextStyle(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: onAddButtonTap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    ),
+                    child: Text(
+                      localObjectNode == null ? "Place Product" : "Remove Product",
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
-                child: const Text(
-                  'Swipe to rotate • Pinch to zoom',
-                  style: TextStyle(color: Colors.white70, letterSpacing: 0.5),
-                ),
-              ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 1.0;
+  void onARViewCreated(
+    ARSessionManager arSessionManager,
+    ARObjectManager arObjectManager,
+    ARAnchorManager arAnchorManager,
+    ARLocationManager arLocationManager,
+  ) {
+    this.arSessionManager = arSessionManager;
+    this.arObjectManager = arObjectManager;
 
-    double step = 40.0;
+    this.arSessionManager!.onInitialize(
+          showFeaturePoints: false,
+          showPlanes: true,
+          showWorldOrigin: false,
+          handleTaps: true,
+        );
+    this.arObjectManager!.onInitialize();
 
-    for (double i = 0; i < size.width; i += step) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
-    }
-
-    for (double i = 0; i < size.height; i += step) {
-      canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
-    }
+    // Check for compatibility errors
+    arSessionManager.onError = (String message) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("AR Error: $message")),
+      );
+    };
   }
 
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  Future<void> onAddButtonTap() async {
+    if (localObjectNode != null) {
+      arObjectManager!.removeNode(localObjectNode!);
+      setState(() {
+        localObjectNode = null;
+      });
+    } else {
+      if (widget.product.arModelUrl == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("AR model not available for this product")),
+        );
+        return;
+      }
+      var newNode = ARNode(
+        type: NodeType.webGLB,
+        uri: widget.product.arModelUrl!,
+        scale: vector.Vector3(0.2, 0.2, 0.2),
+        position: vector.Vector3(0, 0, -0.5),
+        rotation: vector.Vector4(1, 0, 0, 0),
+      );
+      bool? didAddWebNode = await arObjectManager!.addNode(newNode);
+      if (didAddWebNode == true) {
+        setState(() {
+          localObjectNode = newNode;
+        });
+      }
+    }
+  }
 }
