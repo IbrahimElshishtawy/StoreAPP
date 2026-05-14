@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:store/widget/widget_rgister.dart';
+import 'package:store/features/auth/presentation/widgets/register_form.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

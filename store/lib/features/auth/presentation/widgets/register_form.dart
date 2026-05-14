@@ -3,8 +3,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:store/widget/custom_btn.dart';
-import 'package:store/widget/custom_textfeld.dart';
+import 'package:store/presentation/widgets/custom_button.dart';
+import 'package:store/presentation/widgets/custom_textfield.dart';
 
 class WidgetRgister extends StatefulWidget {
   const WidgetRgister({super.key});

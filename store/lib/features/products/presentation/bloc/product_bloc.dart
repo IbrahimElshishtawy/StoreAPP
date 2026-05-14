@@ -1,17 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:store/features/products/domain/repositories/product_repository.dart';
+import 'package:store/features/products/domain/usecases/product_usecases.dart';
 import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class ProductBloc extends Bloc<ProductEvent, ProductState> {
-  final ProductRepository repository;
+  final GetProductsUseCase getProductsUseCase;
+  final GetProductsByCategoryUseCase getProductsByCategoryUseCase;
   List<ProductEntity> _allProducts = [];
 
-  ProductBloc(this.repository) : super(ProductInitial()) {
+  ProductBloc({
+    required this.getProductsUseCase,
+    required this.getProductsByCategoryUseCase,
+  }) : super(ProductInitial()) {
     on<GetProductsRequested>((event, emit) async {
       emit(ProductLoading());
-      final result = await repository.getProducts();
+      final result = await getProductsUseCase();
       result.fold(
         (failure) => emit(ProductError(failure.message)),
         (products) {
@@ -27,8 +31,8 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
     on<SearchProductsRequested>((event, emit) async {
       if (_allProducts.isEmpty) {
-         final result = await repository.getProducts();
-         result.fold((_)=>{}, (products) => _allProducts = products);
+        final result = await getProductsUseCase();
+        result.fold((_) => {}, (products) => _allProducts = products);
       }
 
       final filtered = _allProducts.where((p) {
@@ -50,10 +54,11 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
 
     on<GetProductsByCategoryRequested>((event, emit) async {
       emit(ProductLoading());
-      final result = await repository.getProductsByCategory(event.category);
+      final result = await getProductsByCategoryUseCase(event.category);
       result.fold(
         (failure) => emit(ProductError(failure.message)),
-        (products) => products.isEmpty ? emit(ProductEmpty()) : emit(ProductLoaded(products)),
+        (products) =>
+            products.isEmpty ? emit(ProductEmpty()) : emit(ProductLoaded(products)),
       );
     });
   }

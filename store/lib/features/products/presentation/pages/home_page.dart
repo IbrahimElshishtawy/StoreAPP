@@ -8,11 +8,11 @@ import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
 import 'package:store/features/auth/domain/entities/user_entity.dart';
-import 'package:store/screen/Search_page.dart';
-import 'package:store/screen/cart_page_product.dart';
-import 'package:store/screen/order_hostory_page.dart';
-import 'package:store/screen/product_page.dart';
-import 'package:store/screen/profile_page.dart';
+import 'package:store/features/products/presentation/pages/search_page.dart';
+import 'package:store/features/cart/presentation/pages/cart_page.dart';
+import 'package:store/features/cart/presentation/pages/order_history_page.dart';
+import 'package:store/features/products/presentation/pages/product_page.dart';
+import 'package:store/features/auth/presentation/pages/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

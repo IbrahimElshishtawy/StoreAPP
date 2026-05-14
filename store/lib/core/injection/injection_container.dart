@@ -14,6 +14,7 @@ import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/products/data/datasources/product_remote_data_source.dart';
 import 'package:store/features/products/data/repositories/product_repository_impl.dart';
 import 'package:store/features/products/domain/repositories/product_repository.dart';
+import 'package:store/features/products/domain/usecases/product_usecases.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
@@ -51,7 +52,12 @@ Future<void> init() async {
   sl.registerLazySingleton<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(sl(), sl()));
 
   // Features - Products
-  sl.registerFactory(() => ProductBloc(sl()));
+  sl.registerFactory(() => ProductBloc(
+        getProductsUseCase: sl(),
+        getProductsByCategoryUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => GetProductsUseCase(sl()));
+  sl.registerLazySingleton(() => GetProductsByCategoryUseCase(sl()));
   sl.registerLazySingleton<ProductRepository>(() => ProductRepositoryImpl(sl()));
   sl.registerLazySingleton<ProductRemoteDataSource>(() => ProductRemoteDataSourceImpl(sl()));
 

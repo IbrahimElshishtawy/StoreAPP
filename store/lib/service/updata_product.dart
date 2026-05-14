@@ -1,5 +1,5 @@
 import 'package:store/helper/api.dart';
-import 'package:store/models/prodect_model.dart';
+import 'package:store/features/products/data/models/product_model.dart';
 
 class UpdataProduct {
   Future<ProductModel> updataProduct({

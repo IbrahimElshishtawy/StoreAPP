@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/products/presentation/bloc/product_state.dart';
-import 'package:store/widget/custom_card.dart';
+import 'package:store/presentation/widgets/custom_card.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});

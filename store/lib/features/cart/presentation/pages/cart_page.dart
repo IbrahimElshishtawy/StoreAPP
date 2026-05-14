@@ -8,6 +8,8 @@ import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:store/core/network/payment_service.dart';
+import 'package:store/core/injection/injection_container.dart' as di;
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -40,6 +42,14 @@ class _CartPageState extends State<CartPage> {
     setState(() => isLoading = true);
 
     try {
+      // Integration with Payment Service
+      final paymentService = PaymentService(); // Or get from DI
+      final paymentSuccess = await paymentService.processStripePayment(state.totalAmount);
+
+      if (!paymentSuccess) {
+        throw Exception("Payment failed");
+      }
+
       final orderRef = FirebaseFirestore.instance.collection('orders').doc();
       final items = state.items
           .map(
