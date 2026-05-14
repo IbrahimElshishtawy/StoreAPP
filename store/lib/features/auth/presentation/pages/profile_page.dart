@@ -2,7 +2,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:store/models/customs_userid.dart';
+import 'package:store/features/auth/data/models/user_profile_model.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserProfile user;

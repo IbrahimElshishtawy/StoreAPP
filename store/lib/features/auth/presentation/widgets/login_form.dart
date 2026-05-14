@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/auth/presentation/bloc/auth_event.dart';
-import 'package:store/screen/forgot_pass.dart';
-import 'package:store/widget/custom_btn.dart';
-import 'package:store/widget/custom_textfeld.dart';
+import 'package:store/features/auth/presentation/pages/forgot_pass.dart';
+import 'package:store/presentation/widgets/custom_button.dart';
+import 'package:store/presentation/widgets/custom_textfield.dart';
 
 class WidgetLogin extends StatefulWidget {
   const WidgetLogin({super.key});

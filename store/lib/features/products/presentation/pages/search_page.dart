@@ -1,9 +1,9 @@
 // ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
-import 'package:store/models/prodect_model.dart';
+import 'package:store/features/products/data/models/product_model.dart';
 import 'package:store/service/get_all_product_serive.dart';
-import 'package:store/widget/custom_card.dart';
+import 'package:store/presentation/widgets/custom_card.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
