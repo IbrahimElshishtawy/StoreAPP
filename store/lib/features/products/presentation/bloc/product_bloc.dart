@@ -30,9 +30,16 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
     });
 
     on<SearchProductsRequested>((event, emit) async {
+      emit(ProductLoading());
       if (_allProducts.isEmpty) {
         final result = await getProductsUseCase();
-        result.fold((_) => {}, (products) => _allProducts = products);
+        result.fold(
+          (failure) {
+            emit(ProductError(failure.message));
+            return;
+          },
+          (products) => _allProducts = products,
+        );
       }
 
       final filtered = _allProducts.where((p) {
