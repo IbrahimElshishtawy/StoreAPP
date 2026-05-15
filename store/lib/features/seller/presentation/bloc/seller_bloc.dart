@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
@@ -29,23 +30,42 @@ class SellerBloc extends Bloc<SellerEvent, SellerState> {
 
     on<AddProductRequested>((event, emit) async {
       emit(SellerLoading());
-      // Add product logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(SellerInitial()); // or SellerProductActionSuccess()
+      try {
+        await FirebaseFirestore.instance.collection('products').add({
+          'name': event.name,
+          'description': event.description,
+          'price': event.price,
+          'imageUrl': event.imageUrl,
+          'createdAt': Timestamp.now(),
+        });
+        emit(SellerInitial());
+      } catch (e) {
+        emit(SellerError("Failed to add product: ${e.toString()}"));
+      }
     });
 
     on<UpdateProductRequested>((event, emit) async {
-       emit(SellerLoading());
-      // Update product logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(SellerInitial());
+      emit(SellerLoading());
+      try {
+        // Update product logic
+        await Future.delayed(const Duration(seconds: 1));
+        emit(SellerInitial());
+      } catch (e) {
+        emit(SellerError("Failed to update product: ${e.toString()}"));
+      }
     });
 
     on<DeleteProductRequested>((event, emit) async {
-       emit(SellerLoading());
-      // Delete product logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(SellerInitial());
+      emit(SellerLoading());
+      try {
+        await FirebaseFirestore.instance
+            .collection('products')
+            .doc(event.productId)
+            .delete();
+        emit(SellerInitial());
+      } catch (e) {
+        emit(SellerError("Failed to delete product: ${e.toString()}"));
+      }
     });
   }
 }

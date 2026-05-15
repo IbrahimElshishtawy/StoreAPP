@@ -135,6 +135,28 @@ class VirtualProductCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            product.rating.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${product.ratingCount})',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       Text(
                         product.description,
                         maxLines: 1,

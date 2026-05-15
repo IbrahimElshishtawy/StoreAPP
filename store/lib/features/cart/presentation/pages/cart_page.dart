@@ -20,6 +20,13 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   bool isLoading = false;
+  final TextEditingController _couponController = TextEditingController();
+
+  @override
+  void dispose() {
+    _couponController.dispose();
+    super.dispose();
+  }
 
   Future<void> placeOrder(BuildContext context, CartState state) async {
     if (state.items.isEmpty) {
@@ -106,6 +113,9 @@ class _CartPageState extends State<CartPage> {
         final cartItems = state.items;
 
         return Scaffold(
+          backgroundColor: Theme.of(context).brightness == Brightness.light
+              ? const Color(0xFFF8FAFC)
+              : const Color(0xFF0F172A),
           appBar: AppBar(
             title: Row(
               children: [
@@ -121,7 +131,9 @@ class _CartPageState extends State<CartPage> {
                 ),
               ],
             ),
-            backgroundColor: const Color.fromARGB(255, 230, 230, 230),
+            backgroundColor: Theme.of(context).brightness == Brightness.light
+                ? const Color.fromARGB(255, 230, 230, 230)
+                : const Color(0xFF1E293B),
           ),
           body: cartItems.isEmpty
               ? const Center(
@@ -282,6 +294,81 @@ class _CartPageState extends State<CartPage> {
                               ],
                             ),
                             const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _couponController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Coupon Code',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 12),
+                                    ),
+                                    onSubmitted: (code) {
+                                      if (code.isNotEmpty) {
+                                        context
+                                            .read<CartBloc>()
+                                            .add(ApplyDiscountCode(code));
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (_couponController.text.isNotEmpty) {
+                                      context.read<CartBloc>().add(
+                                          ApplyDiscountCode(
+                                              _couponController.text.trim()));
+                                    }
+                                  },
+                                  child: const Text('Apply'),
+                                ),
+                              ],
+                            ),
+                            if (state.discountAmount > 0) ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Discount (${state.discountCode}):',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                  Text(
+                                    '-\$${state.discountAmount.toStringAsFixed(2)}',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Final Total:',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '\$${state.finalAmount.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.teal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
                             ElevatedButton.icon(
                               onPressed: isLoading
                                   ? null
