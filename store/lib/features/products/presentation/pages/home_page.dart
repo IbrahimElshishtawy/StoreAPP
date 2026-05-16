@@ -13,6 +13,7 @@ import 'package:store/features/cart/presentation/pages/cart_page.dart';
 import 'package:store/features/cart/presentation/pages/order_history_page.dart';
 import 'package:store/features/products/presentation/pages/product_page.dart';
 import 'package:store/features/auth/presentation/pages/profile_page.dart';
+import 'package:store/presentation/widgets/custom_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -153,7 +154,14 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            body: IndexedStack(index: currentIndex, children: pages),
+            body: IndexedStack(
+              index: currentIndex,
+              children: [
+                _buildHomeContent(user),
+                const CartPage(),
+                const SearchPage(),
+              ],
+            ),
             bottomNavigationBar: BottomNavigationBar(
               currentIndex: currentIndex,
               onTap: (index) => setState(() => currentIndex = index),
@@ -170,6 +178,68 @@ class _HomePageState extends State<HomePage> {
 
         return const Scaffold(body: Center(child: Text('Please login')));
       },
+    );
+  }
+
+  Widget _buildHomeContent(UserEntity user) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (user.interests.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Recommended for You',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(
+              height: 250,
+              child: BlocBuilder<ProductBloc, ProductState>(
+                builder: (context, state) {
+                  if (state is ProductLoaded) {
+                    final recommended = state.products
+                        .where((p) => user.interests.contains(p.category))
+                        .toList();
+                    if (recommended.isEmpty) {
+                      return const Center(child: Text("Browse more to see recommendations"));
+                    }
+                    return ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: recommended.length,
+                      itemBuilder: (context, index) {
+                        final product = recommended[index];
+                        return SizedBox(
+                          width: 200,
+                          child: CustomCard(
+                            product: product,
+                            title: product.title,
+                            price: '\$${product.price}',
+                            image: product.image,
+                          ),
+                        );
+                      },
+                    );
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                },
+              ),
+            ),
+          ],
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'All Products',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(
+            height: 600, // Fixed height for simplicity in IndexedStack
+            child: ProductsPage(),
+          ),
+        ],
+      ),
     );
   }
 }

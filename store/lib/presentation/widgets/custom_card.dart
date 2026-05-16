@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/presentation/widgets/product_video_player.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/domain/entities/cart_item.dart';
@@ -130,12 +131,48 @@ class _CustomCardState extends State<CustomCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                      onPressed: addToCart,
-                      icon: const FaIcon(
-                        FontAwesomeIcons.cartShopping,
-                        color: Colors.teal,
-                      ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: addToCart,
+                          icon: const FaIcon(
+                            FontAwesomeIcons.cartShopping,
+                            color: Colors.teal,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => Dialog(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Text("Product Video Showcase",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    const SizedBox(
+                                      height: 300,
+                                      child: ProductVideoPlayer(
+                                          videoUrl:
+                                              "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text("Close"),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.play_circle_outline,
+                              color: Colors.blue),
+                        ),
+                      ],
                     ),
                     Text(
                       widget.price,

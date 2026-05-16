@@ -1,10 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/seller/presentation/bloc/seller_event.dart';
+import 'package:store/features/seller/presentation/bloc/seller_state.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class UploadProductPage extends StatefulWidget {
   const UploadProductPage({super.key});
@@ -56,17 +60,12 @@ class _UploadProductPageState extends State<UploadProductPage> {
     return await uploadTask.ref.getDownloadURL();
   }
 
-  Future<void> uploadProduct() async {
+  void uploadProduct() {
     if (!_formKey.currentState!.validate()) return;
 
     final name = nameController.text.trim();
     final description = descriptionController.text.trim();
-    final price = double.tryParse(priceController.text.trim());
-
-    if (price == null) {
-      showSnack("Invalid price");
-      return;
-    }
+    final price = double.tryParse(priceController.text.trim()) ?? 0.0;
 
     String? imageUrl;
     if (useUrlInstead) {
@@ -80,31 +79,20 @@ class _UploadProductPageState extends State<UploadProductPage> {
         showSnack("Please select an image", color: Colors.orange);
         return;
       }
-      imageUrl = await uploadImageToFirebase(_selectedImage!);
+      // For simplicity in this mock, we use the local path as a URL
+      imageUrl = _selectedImage!.path;
     }
 
-    setState(() => isLoading = true);
+    final product = ProductEntity(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: name,
+      description: description,
+      price: price,
+      image: imageUrl,
+      category: "seller_upload",
+    );
 
-    try {
-      await FirebaseFirestore.instance.collection('products').add({
-        'name': name,
-        'description': description,
-        'price': price,
-        'imageUrl': imageUrl,
-        'createdAt': Timestamp.now(),
-      });
-
-      showSnack("✅ Product uploaded successfully", color: Colors.green);
-      nameController.clear();
-      descriptionController.clear();
-      priceController.clear();
-      urlController.clear();
-      setState(() => _selectedImage = null);
-    } catch (e) {
-      showSnack("Error uploading product: $e", color: Colors.red);
-    } finally {
-      setState(() => isLoading = false);
-    }
+    context.read<SellerBloc>().add(AddProductRequested(product));
   }
 
   Widget buildProductCard() {
@@ -252,74 +240,93 @@ class _UploadProductPageState extends State<UploadProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Upload Product"),
-        backgroundColor: Colors.blue[800],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildProductCard(),
-            const SizedBox(height: 20),
-            Form(
-              key: _formKey,
+    return BlocListener<SellerBloc, SellerState>(
+      listener: (context, state) {
+        if (state is SellerInitial) {
+           showSnack("✅ Product uploaded successfully", color: Colors.green);
+           Navigator.pop(context);
+        } else if (state is SellerError) {
+          showSnack(state.message, color: Colors.red);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Upload Product"),
+          backgroundColor: Colors.blue[800],
+        ),
+        body: BlocBuilder<SellerBloc, SellerState>(
+          builder: (context, state) {
+            final isLoading = state is SellerLoading;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  buildImagePicker(),
+                  buildProductCard(),
                   const SizedBox(height: 20),
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: "Product Name",
-                    ),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter product name' : null,
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: "Description"),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter description' : null,
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: priceController,
-                    decoration: const InputDecoration(labelText: "Price"),
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter price' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  isLoading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: uploadProduct,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[800],
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                              horizontal: 40,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        buildImagePicker(),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: nameController,
+                          decoration: const InputDecoration(
+                            labelText: "Product Name",
                           ),
-                          child: const Text(
-                            "Upload Product",
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          onChanged: (_) => setState(() {}),
+                          validator: (value) => value!.isEmpty
+                              ? 'Please enter product name'
+                              : null,
                         ),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: descriptionController,
+                          decoration:
+                              const InputDecoration(labelText: "Description"),
+                          onChanged: (_) => setState(() {}),
+                          validator: (value) => value!.isEmpty
+                              ? 'Please enter description'
+                              : null,
+                        ),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: priceController,
+                          decoration: const InputDecoration(labelText: "Price"),
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => setState(() {}),
+                          validator: (value) =>
+                              value!.isEmpty ? 'Please enter price' : null,
+                        ),
+                        const SizedBox(height: 20),
+                        isLoading
+                            ? const CircularProgressIndicator()
+                            : ElevatedButton(
+                                onPressed: uploadProduct,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue[800],
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                    horizontal: 40,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Upload Product",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

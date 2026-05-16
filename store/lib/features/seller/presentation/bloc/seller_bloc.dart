@@ -29,23 +29,33 @@ class SellerBloc extends Bloc<SellerEvent, SellerState> {
 
     on<AddProductRequested>((event, emit) async {
       emit(SellerLoading());
-      // Add product logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(SellerInitial()); // or SellerProductActionSuccess()
+      try {
+        // In a real app, this would call a repository
+        await Future.delayed(const Duration(seconds: 1));
+        emit(SellerInitial());
+      } catch (e) {
+        emit(SellerError(e.toString()));
+      }
     });
 
     on<UpdateProductRequested>((event, emit) async {
-       emit(SellerLoading());
-      // Update product logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(SellerInitial());
+      emit(SellerLoading());
+      try {
+        await Future.delayed(const Duration(seconds: 1));
+        emit(SellerInitial());
+      } catch (e) {
+        emit(SellerError(e.toString()));
+      }
     });
 
     on<DeleteProductRequested>((event, emit) async {
-       emit(SellerLoading());
-      // Delete product logic
-      await Future.delayed(const Duration(seconds: 1));
-      emit(SellerInitial());
+      emit(SellerLoading());
+      try {
+        await Future.delayed(const Duration(seconds: 1));
+        emit(SellerInitial());
+      } catch (e) {
+        emit(SellerError(e.toString()));
+      }
     });
   }
 }
