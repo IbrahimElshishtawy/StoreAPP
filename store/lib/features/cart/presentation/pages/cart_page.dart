@@ -20,6 +20,7 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   bool isLoading = false;
+  final TextEditingController _couponController = TextEditingController();
 
   Future<void> placeOrder(BuildContext context, CartState state) async {
     if (state.items.isEmpty) {
@@ -262,6 +263,45 @@ class _CartPageState extends State<CartPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _couponController,
+                                    decoration: const InputDecoration(
+                                      hintText: "Enter coupon (e.g., SAVE10)",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    context.read<CartBloc>().add(
+                                          ApplyDiscountCode(
+                                              _couponController.text.trim()),
+                                        );
+                                  },
+                                  child: const Text("Apply"),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            if (state.discountAmount > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text("Discount:"),
+                                    Text(
+                                        "-\$${state.discountAmount.toStringAsFixed(2)}",
+                                        style: const TextStyle(
+                                            color: Colors.red)),
+                                  ],
+                                ),
+                              ),
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
@@ -272,7 +312,7 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
                                 Text(
-                                  '\$${state.totalAmount.toStringAsFixed(2)}',
+                                  '\$${(state.totalAmount - state.discountAmount).toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,

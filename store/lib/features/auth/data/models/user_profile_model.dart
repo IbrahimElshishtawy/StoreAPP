@@ -9,6 +9,7 @@ class UserProfile {
   final String phone;
   final String? password;
   final String? imageUrl; // ✅ شيلنا late
+  final List<String> interests;
 
   UserProfile({
     required this.id,
@@ -19,6 +20,7 @@ class UserProfile {
     required this.phone,
     this.password,
     this.imageUrl,
+    this.interests = const [],
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> data, String documentId) {
@@ -31,6 +33,7 @@ class UserProfile {
       phone: data['phone'] ?? '',
       password: data['password'],
       imageUrl: data['imageUrl'],
+      interests: List<String>.from(data['interests'] ?? []),
     );
   }
 
@@ -43,6 +46,7 @@ class UserProfile {
       'phone': phone,
       if (password != null) 'password': password,
       if (imageUrl != null) 'imageUrl': imageUrl,
+      'interests': interests,
     };
   }
 }

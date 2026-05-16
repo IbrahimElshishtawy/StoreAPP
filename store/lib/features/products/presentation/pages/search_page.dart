@@ -1,9 +1,12 @@
 // ignore_for_file: file_names
 
 import 'package:flutter/material.dart';
-import 'package:store/features/products/data/models/product_model.dart';
-import 'package:store/service/get_all_product_serive.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/products/presentation/bloc/product_bloc.dart';
+import 'package:store/features/products/presentation/bloc/product_event.dart';
+import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/presentation/widgets/custom_card.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -13,38 +16,97 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  List<ProductModel> _allProducts = [];
-  List<ProductModel> _filteredProducts = [];
-  bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedCategory;
+  double _minPrice = 0;
+  double _maxPrice = 1000;
+  double _minRating = 0;
 
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
+    _dispatchSearch();
   }
 
-  Future<void> _fetchProducts() async {
-    try {
-      final List<ProductModel> products = await GetAllProductService()
-          .getAllProducts();
-      setState(() {
-        _allProducts = products;
-        _filteredProducts = products;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      debugPrint('❌ Error fetching products: $e');
-    }
+  void _dispatchSearch() {
+    context.read<ProductBloc>().add(SearchProductsRequested(
+          query: _searchController.text,
+          category: _selectedCategory,
+          minPrice: _minPrice,
+          maxPrice: _maxPrice,
+          minRating: _minRating,
+        ));
   }
 
-  void _filterProducts(String query) {
-    final results = _allProducts.where((product) {
-      return product.title?.toLowerCase().contains(query.toLowerCase()) ??
-          false;
-    }).toList();
-
-    setState(() => _filteredProducts = results);
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("Filters",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  DropdownButton<String>(
+                    value: _selectedCategory,
+                    hint: const Text("Select Category"),
+                    isExpanded: true,
+                    items: ["electronics", "jewelery", "men's clothing", "women's clothing"]
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
+                    onChanged: (val) {
+                      setModalState(() => _selectedCategory = val);
+                      setState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text("Price Range: \$${_minPrice.round()} - \$${_maxPrice.round()}"),
+                  RangeSlider(
+                    values: RangeValues(_minPrice, _maxPrice),
+                    min: 0,
+                    max: 1000,
+                    onChanged: (val) {
+                      setModalState(() {
+                        _minPrice = val.start;
+                        _maxPrice = val.end;
+                      });
+                      setState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text("Minimum Rating: ${_minRating.toStringAsFixed(1)}"),
+                  Slider(
+                    value: _minRating,
+                    min: 0,
+                    max: 5,
+                    divisions: 5,
+                    onChanged: (val) {
+                      setModalState(() => _minRating = val);
+                      setState(() {});
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      _dispatchSearch();
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Apply Filters"),
+                  )
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -53,23 +115,40 @@ class _SearchPageState extends State<SearchPage> {
       children: [
         Padding(
           padding: const EdgeInsets.all(10),
-          child: TextField(
-            onChanged: _filterProducts,
-            decoration: InputDecoration(
-              hintText: 'Search for a product...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (val) => _dispatchSearch(),
+                  decoration: InputDecoration(
+                    hintText: 'Search for a product...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: _showFilterBottomSheet,
+                icon: const Icon(Icons.tune),
+              )
+            ],
           ),
         ),
         Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _filteredProducts.isEmpty
-              ? const Center(child: Text('No products found'))
-              : GridView.builder(
+          child: BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, state) {
+              if (state is ProductLoading) {
+                return const LoadingIndicator();
+              } else if (state is ProductEmpty) {
+                return const EmptyState(message: "No products found");
+              } else if (state is ProductError) {
+                return Center(child: Text(state.message));
+              } else if (state is ProductLoaded) {
+                return GridView.builder(
                   padding: const EdgeInsets.all(8),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -77,16 +156,21 @@ class _SearchPageState extends State<SearchPage> {
                     crossAxisSpacing: 8,
                     childAspectRatio: 0.75,
                   ),
-                  itemCount: _filteredProducts.length,
+                  itemCount: state.products.length,
                   itemBuilder: (context, index) {
+                    final product = state.products[index];
                     return CustomCard(
-                      product: _filteredProducts[index],
-                      title: _filteredProducts[index].title ?? '',
-                      price: _filteredProducts[index].price?.toString() ?? '',
-                      image: _filteredProducts[index].imageUrl ?? '',
+                      product: product,
+                      title: product.title,
+                      price: '\$${product.price}',
+                      image: product.image,
                     );
                   },
-                ),
+                );
+              }
+              return const Center(child: Text("Search for products"));
+            },
+          ),
         ),
       ],
     );
