@@ -13,6 +13,7 @@ import 'package:store/features/cart/presentation/pages/cart_page.dart';
 import 'package:store/features/cart/presentation/pages/order_history_page.dart';
 import 'package:store/features/products/presentation/pages/product_page.dart';
 import 'package:store/features/auth/presentation/pages/profile_page.dart';
+import 'package:store/features/chat/presentation/pages/chat_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -99,6 +100,14 @@ class _HomePageState extends State<HomePage> {
                             onTap: () {
                               Navigator.pop(context);
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderHistoryPage()));
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.chat_outlined, color: Colors.blue),
+                            title: const Text('Live Support'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPage()));
                             },
                           ),
                           const Divider(thickness: 1.2),

@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
+import 'package:store/core/util/responsive_layout.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -31,27 +32,35 @@ class _SellerDashboardState extends State<SellerDashboard> {
             return const Center(child: CircularProgressIndicator());
           } else if (state is SellerStatsLoaded) {
             final stats = state.stats;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSummaryCards(stats),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Sales Overview",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSalesChart(stats.dailySales),
-                ],
-              ),
+            return ResponsiveLayout(
+              mobile: _buildContent(stats, 1),
+              tablet: _buildContent(stats, 2),
+              desktop: _buildContent(stats, 3),
             );
           } else if (state is SellerError) {
             return Center(child: Text(state.message));
           }
           return const Center(child: Text("No stats available"));
         },
+      ),
+    );
+  }
+
+  Widget _buildContent(dynamic stats, int crossAxisCount) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSummaryCards(stats),
+          const SizedBox(height: 24),
+          const Text(
+            "Sales Overview",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _buildSalesChart(stats.dailySales),
+        ],
       ),
     );
   }

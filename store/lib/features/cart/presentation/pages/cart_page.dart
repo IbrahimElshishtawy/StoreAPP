@@ -109,7 +109,7 @@ class _CartPageState extends State<CartPage> {
           appBar: AppBar(
             title: Row(
               children: [
-                const Text("Your Cart"),
+                const Text("سلة التسوق"),
                 const SizedBox(width: 8),
                 CircleAvatar(
                   backgroundColor: Colors.white,
@@ -265,7 +265,7 @@ class _CartPageState extends State<CartPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
-                                  'Total:',
+                                  'الإجمالي:',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -297,7 +297,7 @@ class _CartPageState extends State<CartPage> {
                                     )
                                   : const Icon(Icons.check_circle_outline),
                               label: Text(
-                                isLoading ? "Placing Order..." : "Place Order",
+                                isLoading ? "جاري إتمام الطلب..." : "إتمام الطلب",
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.teal,
