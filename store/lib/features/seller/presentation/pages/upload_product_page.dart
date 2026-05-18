@@ -1,10 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/seller/presentation/bloc/seller_event.dart';
+import 'package:store/features/seller/presentation/bloc/seller_state.dart';
 
 class UploadProductPage extends StatefulWidget {
   const UploadProductPage({super.key});
@@ -47,15 +50,6 @@ class _UploadProductPageState extends State<UploadProductPage> {
     }
   }
 
-  Future<String> uploadImageToFirebase(File file) async {
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    final ref = FirebaseStorage.instance.ref().child(
-      'product_images/$fileName.jpg',
-    );
-    final uploadTask = await ref.putFile(file);
-    return await uploadTask.ref.getDownloadURL();
-  }
-
   Future<void> uploadProduct() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -69,6 +63,8 @@ class _UploadProductPageState extends State<UploadProductPage> {
     }
 
     String? imageUrl;
+    File? imageFile;
+
     if (useUrlInstead) {
       imageUrl = urlController.text.trim();
       if (imageUrl.isEmpty) {
@@ -80,31 +76,23 @@ class _UploadProductPageState extends State<UploadProductPage> {
         showSnack("Please select an image", color: Colors.orange);
         return;
       }
-      imageUrl = await uploadImageToFirebase(_selectedImage!);
+      imageFile = _selectedImage;
+      imageUrl = ''; // Will be set by data layer
     }
 
-    setState(() => isLoading = true);
-
-    try {
-      await FirebaseFirestore.instance.collection('products').add({
-        'name': name,
-        'description': description,
-        'price': price,
-        'imageUrl': imageUrl,
-        'createdAt': Timestamp.now(),
-      });
-
-      showSnack("✅ Product uploaded successfully", color: Colors.green);
-      nameController.clear();
-      descriptionController.clear();
-      priceController.clear();
-      urlController.clear();
-      setState(() => _selectedImage = null);
-    } catch (e) {
-      showSnack("Error uploading product: $e", color: Colors.red);
-    } finally {
-      setState(() => isLoading = false);
-    }
+    context.read<SellerBloc>().add(
+          AddProductRequested(
+            ProductEntity(
+              id: '',
+              title: name,
+              description: description,
+              price: price,
+              image: imageUrl,
+              category: 'General', // Default category
+            ),
+            imageFile: imageFile,
+          ),
+        );
   }
 
   Widget buildProductCard() {
@@ -252,12 +240,29 @@ class _UploadProductPageState extends State<UploadProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Upload Product"),
-        backgroundColor: Colors.blue[800],
-      ),
-      body: SingleChildScrollView(
+    return BlocListener<SellerBloc, SellerState>(
+      listener: (context, state) {
+        if (state is SellerLoading) {
+          setState(() => isLoading = true);
+        } else if (state is SellerProductActionSuccess) {
+          setState(() => isLoading = false);
+          showSnack("✅ ${state.message}", color: Colors.green);
+          nameController.clear();
+          descriptionController.clear();
+          priceController.clear();
+          urlController.clear();
+          setState(() => _selectedImage = null);
+        } else if (state is SellerError) {
+          setState(() => isLoading = false);
+          showSnack("Error: ${state.message}", color: Colors.red);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Upload Product"),
+          backgroundColor: Colors.blue[800],
+        ),
+        body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

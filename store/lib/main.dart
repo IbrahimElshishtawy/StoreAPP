@@ -21,6 +21,7 @@ import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +54,16 @@ class Store extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             title: 'Clinic Store',
             themeMode: themeMode,
+            locale: const Locale('ar', 'AE'),
+            supportedLocales: const [
+              Locale('en', 'US'),
+              Locale('ar', 'AE'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             theme: ThemeData(
               primarySwatch: Colors.blue,
               useMaterial3: true,

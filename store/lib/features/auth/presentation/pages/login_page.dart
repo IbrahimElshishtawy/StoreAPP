@@ -4,6 +4,7 @@ import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/auth/presentation/bloc/auth_state.dart';
 import 'package:store/features/auth/presentation/bloc/auth_event.dart';
 import 'package:store/features/auth/presentation/widgets/login_form.dart';
+import 'package:store/core/util/responsive_layout.dart';
 
 class LoginPage extends StatelessWidget {
   static String id = 'loginPage';
@@ -15,7 +16,7 @@ class LoginPage extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
-        title: const Text("Enter 2FA Code"),
+        title: const Text("أدخل رمز التحقق الثنائي"),
         content: TextField(
           controller: codeController,
           keyboardType: TextInputType.number,
@@ -24,7 +25,7 @@ class LoginPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("Cancel"),
+            child: const Text("إلغاء"),
           ),
           ElevatedButton(
             onPressed: () {
@@ -36,7 +37,7 @@ class LoginPage extends StatelessWidget {
                   );
               Navigator.pop(dialogContext);
             },
-            child: const Text("Verify"),
+            child: const Text("تحقق"),
           ),
         ],
       ),
@@ -64,7 +65,29 @@ class LoginPage extends StatelessWidget {
             if (state is AuthLoading) {
               return const Center(child: CircularProgressIndicator());
             }
-            return const WidgetLogin();
+            return ResponsiveLayout(
+              mobile: const WidgetLogin(),
+              tablet: Center(
+                child: SizedBox(
+                  width: 500,
+                  child: Card(
+                    elevation: 4,
+                    margin: const EdgeInsets.all(32),
+                    child: const WidgetLogin(),
+                  ),
+                ),
+              ),
+              desktop: Center(
+                child: SizedBox(
+                  width: 600,
+                  child: Card(
+                    elevation: 8,
+                    margin: const EdgeInsets.all(64),
+                    child: const WidgetLogin(),
+                  ),
+                ),
+              ),
+            );
           },
         ),
       ),
