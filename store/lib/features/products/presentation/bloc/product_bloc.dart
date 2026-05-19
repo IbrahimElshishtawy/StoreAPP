@@ -61,5 +61,31 @@ class ProductBloc extends Bloc<ProductEvent, ProductState> {
             products.isEmpty ? emit(ProductEmpty()) : emit(ProductLoaded(products)),
       );
     });
+
+    on<GetRecommendedProductsRequested>((event, emit) async {
+      emit(ProductLoading());
+      if (_allProducts.isEmpty) {
+        final result = await getProductsUseCase();
+        result.fold((_) => {}, (products) => _allProducts = products);
+      }
+
+      if (_allProducts.isEmpty) {
+        emit(ProductEmpty());
+        return;
+      }
+
+      final recommended = _allProducts.where((p) {
+        return event.interests.any((interest) =>
+            p.category.toLowerCase().contains(interest.toLowerCase()) ||
+            p.title.toLowerCase().contains(interest.toLowerCase()));
+      }).toList();
+
+      if (recommended.isEmpty) {
+        // Fallback to top rated or some default if no match
+        emit(ProductLoaded(_allProducts.take(5).toList()));
+      } else {
+        emit(ProductLoaded(recommended));
+      }
+    });
   }
 }

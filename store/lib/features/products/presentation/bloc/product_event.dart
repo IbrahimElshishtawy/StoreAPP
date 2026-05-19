@@ -24,3 +24,8 @@ class GetProductsByCategoryRequested extends ProductEvent {
   final String category;
   GetProductsByCategoryRequested(this.category);
 }
+
+class GetRecommendedProductsRequested extends ProductEvent {
+  final List<String> interests;
+  GetRecommendedProductsRequested(this.interests);
+}
