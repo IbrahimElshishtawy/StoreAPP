@@ -25,7 +25,14 @@ class _SellerDashboardState extends State<SellerDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Seller Dashboard")),
-      body: BlocBuilder<SellerBloc, SellerState>(
+      body: BlocConsumer<SellerBloc, SellerState>(
+        listener: (context, state) {
+          if (state is SellerError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is SellerLoading) {
             return const Center(child: CircularProgressIndicator());

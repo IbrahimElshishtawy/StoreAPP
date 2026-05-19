@@ -21,6 +21,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       emit(state.copyWith(
         items: updatedItems,
         totalAmount: _calculateTotal(updatedItems),
+        status: CartStatus.success,
       ));
     });
 
@@ -29,6 +30,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       emit(state.copyWith(
         items: updatedItems,
         totalAmount: _calculateTotal(updatedItems),
+        status: CartStatus.success,
       ));
     });
 
@@ -44,20 +46,28 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         emit(state.copyWith(
           items: updatedItems,
           totalAmount: _calculateTotal(updatedItems),
+          status: CartStatus.success,
         ));
       }
     });
 
     on<ApplyDiscountCode>((event, emit) {
+      emit(state.copyWith(status: CartStatus.loading));
       // Mock discount logic
       double discount = 0.0;
       if (event.code == 'SAVE10') {
         discount = state.totalAmount * 0.1;
+        emit(state.copyWith(
+          discountCode: event.code,
+          discountAmount: discount,
+          status: CartStatus.success,
+        ));
+      } else {
+        emit(state.copyWith(
+          status: CartStatus.error,
+          errorMessage: 'Invalid discount code',
+        ));
       }
-      emit(state.copyWith(
-        discountCode: event.code,
-        discountAmount: discount,
-      ));
     });
 
     on<ClearCart>((event, emit) {

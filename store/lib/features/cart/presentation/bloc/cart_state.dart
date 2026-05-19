@@ -1,16 +1,22 @@
 import 'package:store/features/cart/domain/entities/cart_item.dart';
 
+enum CartStatus { initial, loading, success, error }
+
 class CartState {
   final List<CartItem> items;
   final double totalAmount;
   final String? discountCode;
   final double discountAmount;
+  final CartStatus status;
+  final String? errorMessage;
 
   CartState({
     this.items = const [],
     this.totalAmount = 0.0,
     this.discountCode,
     this.discountAmount = 0.0,
+    this.status = CartStatus.initial,
+    this.errorMessage,
   });
 
   double get finalAmount => totalAmount - discountAmount;
@@ -20,12 +26,16 @@ class CartState {
     double? totalAmount,
     String? discountCode,
     double? discountAmount,
+    CartStatus? status,
+    String? errorMessage,
   }) {
     return CartState(
       items: items ?? this.items,
       totalAmount: totalAmount ?? this.totalAmount,
       discountCode: discountCode ?? this.discountCode,
       discountAmount: discountAmount ?? this.discountAmount,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 }

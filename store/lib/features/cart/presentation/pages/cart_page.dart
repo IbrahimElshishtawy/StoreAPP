@@ -10,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:store/core/network/payment_service.dart';
 import 'package:store/core/injection/injection_container.dart' as di;
+import 'package:store/presentation/widgets/empty_state.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -99,9 +100,27 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
+  final TextEditingController _couponController = TextEditingController();
+
+  @override
+  void dispose() {
+    _couponController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CartBloc, CartState>(
+    return BlocConsumer<CartBloc, CartState>(
+      listener: (context, state) {
+        if (state.status == CartStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? 'An error occurred'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         final cartItems = state.items;
 
@@ -124,22 +143,10 @@ class _CartPageState extends State<CartPage> {
             backgroundColor: const Color.fromARGB(255, 230, 230, 230),
           ),
           body: cartItems.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        size: 60,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Your cart is empty',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    ],
-                  ),
+              ? const EmptyState(
+                  icon: Icons.shopping_cart_outlined,
+                  message: 'Your cart is empty',
+                  subMessage: 'Explore products and add them to your cart!',
                 )
               : SafeArea(
                   child: Column(
@@ -281,6 +288,45 @@ class _CartPageState extends State<CartPage> {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _couponController,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Enter coupon (e.g. SAVE10)',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                    onSubmitted: (value) {
+                                      if (value.isNotEmpty) {
+                                        context.read<CartBloc>().add(ApplyDiscountCode(value));
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (_couponController.text.isNotEmpty) {
+                                      context.read<CartBloc>().add(
+                                            ApplyDiscountCode(_couponController.text.trim()),
+                                          );
+                                    }
+                                  },
+                                  child: const Text('Apply'),
+                                ),
+                              ],
+                            ),
+                            if (state.discountAmount > 0)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  'Discount: -\$${state.discountAmount.toStringAsFixed(2)} (${state.discountCode})',
+                                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                ),
+                              ),
                             const SizedBox(height: 12),
                             ElevatedButton.icon(
                               onPressed: isLoading
