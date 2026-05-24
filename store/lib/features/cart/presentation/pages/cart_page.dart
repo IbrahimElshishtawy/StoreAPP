@@ -9,7 +9,6 @@ import 'package:store/features/cart/presentation/bloc/cart_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:store/core/network/payment_service.dart';
-import 'package:store/core/injection/injection_container.dart' as di;
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -20,6 +19,7 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   bool isLoading = false;
+  final TextEditingController _couponController = TextEditingController();
 
   Future<void> placeOrder(BuildContext context, CartState state) async {
     if (state.items.isEmpty) {
@@ -43,8 +43,8 @@ class _CartPageState extends State<CartPage> {
 
     try {
       // Integration with Payment Service
-      final paymentService = PaymentService(); // Or get from DI
-      final paymentSuccess = await paymentService.processStripePayment(state.totalAmount);
+      final paymentService = PaymentService();
+      final paymentSuccess = await paymentService.processStripePayment(state.totalAmount - state.discountAmount);
 
       if (!paymentSuccess) {
         throw Exception("Payment failed");
@@ -66,7 +66,7 @@ class _CartPageState extends State<CartPage> {
         'orderId': orderRef.id,
         'userId': user.uid,
         'items': items,
-        'totalPrice': state.totalAmount,
+        'totalPrice': state.totalAmount - state.discountAmount,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -262,6 +262,37 @@ class _CartPageState extends State<CartPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _couponController,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Enter Coupon Code',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    context.read<CartBloc>().add(
+                                      ApplyDiscountCode(_couponController.text),
+                                    );
+                                  },
+                                  child: const Text('Apply'),
+                                ),
+                              ],
+                            ),
+                            if (state.discountAmount > 0)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Text(
+                                  'Discount Applied: -\$${state.discountAmount.toStringAsFixed(2)}',
+                                  style: const TextStyle(color: Colors.green),
+                                ),
+                              ),
+                            const SizedBox(height: 12),
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
@@ -272,7 +303,7 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
                                 Text(
-                                  '\$${state.totalAmount.toStringAsFixed(2)}',
+                                  '\$${(state.totalAmount - state.discountAmount).toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
