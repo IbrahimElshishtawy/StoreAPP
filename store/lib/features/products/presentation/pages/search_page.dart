@@ -1,8 +1,8 @@
-// ignore_for_file: file_names
-
 import 'package:flutter/material.dart';
-import 'package:store/features/products/data/models/product_model.dart';
-import 'package:store/service/get_all_product_serive.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/products/presentation/bloc/product_bloc.dart';
+import 'package:store/features/products/presentation/bloc/product_event.dart';
+import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/presentation/widgets/custom_card.dart';
 
 class SearchPage extends StatefulWidget {
@@ -13,38 +13,31 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  List<ProductModel> _allProducts = [];
-  List<ProductModel> _filteredProducts = [];
-  bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
+  String? _selectedCategory;
+  RangeValues _priceRange = const RangeValues(0, 1000);
+
+  final List<String> _categories = [
+    'electronics',
+    'jewelery',
+    "men's clothing",
+    "women's clothing"
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
+    // Fetch all products initially if not already loaded
+    context.read<ProductBloc>().add(GetProductsRequested());
   }
 
-  Future<void> _fetchProducts() async {
-    try {
-      final List<ProductModel> products = await GetAllProductService()
-          .getAllProducts();
-      setState(() {
-        _allProducts = products;
-        _filteredProducts = products;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      debugPrint('❌ Error fetching products: $e');
-    }
-  }
-
-  void _filterProducts(String query) {
-    final results = _allProducts.where((product) {
-      return product.title?.toLowerCase().contains(query.toLowerCase()) ??
-          false;
-    }).toList();
-
-    setState(() => _filteredProducts = results);
+  void _onSearchChanged() {
+    context.read<ProductBloc>().add(SearchProductsRequested(
+      query: _searchController.text,
+      category: _selectedCategory,
+      minPrice: _priceRange.start,
+      maxPrice: _priceRange.end,
+    ));
   }
 
   @override
@@ -52,41 +45,104 @@ class _SearchPageState extends State<SearchPage> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(10),
-          child: TextField(
-            onChanged: _filterProducts,
-            decoration: InputDecoration(
-              hintText: 'Search for a product...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                onChanged: (_) => _onSearchChanged(),
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
-            ),
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ChoiceChip(
+                      label: const Text('All'),
+                      selected: _selectedCategory == null,
+                      onSelected: (selected) {
+                        setState(() => _selectedCategory = null);
+                        _onSearchChanged();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ..._categories.map((category) => Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ChoiceChip(
+                        label: Text(category),
+                        selected: _selectedCategory == category,
+                        onSelected: (selected) {
+                          setState(() => _selectedCategory = selected ? category : null);
+                          _onSearchChanged();
+                        },
+                      ),
+                    )),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Text('Price: '),
+                  Expanded(
+                    child: RangeSlider(
+                      values: _priceRange,
+                      min: 0,
+                      max: 1000,
+                      divisions: 20,
+                      labels: RangeLabels(
+                        '\$${_priceRange.start.round()}',
+                        '\$${_priceRange.end.round()}',
+                      ),
+                      onChanged: (values) {
+                        setState(() => _priceRange = values);
+                        _onSearchChanged();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _filteredProducts.isEmpty
-              ? const Center(child: Text('No products found'))
-              : GridView.builder(
+          child: BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, state) {
+              if (state is ProductLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ProductLoaded) {
+                return GridView.builder(
                   padding: const EdgeInsets.all(8),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
-                    childAspectRatio: 0.75,
+                    childAspectRatio: 0.7,
                   ),
-                  itemCount: _filteredProducts.length,
+                  itemCount: state.products.length,
                   itemBuilder: (context, index) {
+                    final product = state.products[index];
                     return CustomCard(
-                      product: _filteredProducts[index],
-                      title: _filteredProducts[index].title ?? '',
-                      price: _filteredProducts[index].price?.toString() ?? '',
-                      image: _filteredProducts[index].imageUrl ?? '',
+                      product: product,
+                      title: product.title,
+                      price: '\$${product.price}',
+                      image: product.image,
                     );
                   },
-                ),
+                );
+              } else if (state is ProductEmpty) {
+                return const Center(child: Text('No products found'));
+              } else if (state is ProductError) {
+                return Center(child: Text(state.message));
+              }
+              return const Center(child: Text('Start searching!'));
+            },
+          ),
         ),
       ],
     );
