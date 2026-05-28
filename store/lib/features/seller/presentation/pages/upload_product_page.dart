@@ -1,10 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/seller/presentation/bloc/seller_event.dart';
+import 'package:store/features/seller/presentation/bloc/seller_state.dart';
 
 class UploadProductPage extends StatefulWidget {
   const UploadProductPage({super.key});
@@ -56,7 +59,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
     return await uploadTask.ref.getDownloadURL();
   }
 
-  Future<void> uploadProduct() async {
+  void uploadProduct() {
     if (!_formKey.currentState!.validate()) return;
 
     final name = nameController.text.trim();
@@ -80,31 +83,22 @@ class _UploadProductPageState extends State<UploadProductPage> {
         showSnack("Please select an image", color: Colors.orange);
         return;
       }
-      imageUrl = await uploadImageToFirebase(_selectedImage!);
     }
 
-    setState(() => isLoading = true);
+    final product = ProductEntity(
+      id: '',
+      title: name,
+      description: description,
+      price: price,
+      image: imageUrl ?? '',
+      category: 'General',
+      rating: 0.0,
+      ratingCount: 0,
+    );
 
-    try {
-      await FirebaseFirestore.instance.collection('products').add({
-        'name': name,
-        'description': description,
-        'price': price,
-        'imageUrl': imageUrl,
-        'createdAt': Timestamp.now(),
-      });
-
-      showSnack("✅ Product uploaded successfully", color: Colors.green);
-      nameController.clear();
-      descriptionController.clear();
-      priceController.clear();
-      urlController.clear();
-      setState(() => _selectedImage = null);
-    } catch (e) {
-      showSnack("Error uploading product: $e", color: Colors.red);
-    } finally {
-      setState(() => isLoading = false);
-    }
+    context.read<SellerBloc>().add(
+          AddProductRequested(product, imageFile: useUrlInstead ? null : _selectedImage),
+        );
   }
 
   Widget buildProductCard() {
@@ -257,7 +251,20 @@ class _UploadProductPageState extends State<UploadProductPage> {
         title: const Text("Upload Product"),
         backgroundColor: Colors.blue[800],
       ),
-      body: SingleChildScrollView(
+      body: BlocListener<SellerBloc, SellerState>(
+        listener: (context, state) {
+          if (state is SellerActionSuccess) {
+            showSnack("✅ ${state.message}", color: Colors.green);
+            nameController.clear();
+            descriptionController.clear();
+            priceController.clear();
+            urlController.clear();
+            setState(() => _selectedImage = null);
+          } else if (state is SellerError) {
+            showSnack("❌ ${state.message}", color: Colors.red);
+          }
+        },
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,7 +304,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                         value!.isEmpty ? 'Please enter price' : null,
                   ),
                   const SizedBox(height: 20),
-                  isLoading
+                  context.watch<SellerBloc>().state is SellerLoading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
                           onPressed: uploadProduct,

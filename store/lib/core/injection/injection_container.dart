@@ -17,7 +17,16 @@ import 'package:store/features/products/domain/repositories/product_repository.d
 import 'package:store/features/products/domain/usecases/product_usecases.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:store/features/seller/data/datasources/seller_remote_data_source.dart';
+import 'package:store/features/seller/data/repositories/seller_repository_impl.dart';
+import 'package:store/features/seller/domain/repositories/seller_repository.dart';
+import 'package:store/features/seller/domain/usecases/seller_usecases.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/reviews/data/datasources/review_remote_data_source.dart';
+import 'package:store/features/reviews/data/repositories/review_repository_impl.dart';
+import 'package:store/features/reviews/domain/repositories/review_repository.dart';
+import 'package:store/features/reviews/domain/usecases/review_usecases.dart';
+import 'package:store/features/reviews/presentation/bloc/review_bloc.dart';
 import 'package:store/core/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -65,5 +74,28 @@ Future<void> init() async {
   sl.registerFactory(() => CartBloc());
 
   // Features - Seller
-  sl.registerFactory(() => SellerBloc());
+  sl.registerFactory(() => SellerBloc(
+        getSellerStatsUseCase: sl(),
+        addProductUseCase: sl(),
+        updateProductUseCase: sl(),
+        deleteProductUseCase: sl(),
+        promoteProductUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => GetSellerStatsUseCase(sl()));
+  sl.registerLazySingleton(() => AddProductUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteProductUseCase(sl()));
+  sl.registerLazySingleton(() => PromoteProductUseCase(sl()));
+  sl.registerLazySingleton<SellerRepository>(() => SellerRepositoryImpl(sl()));
+  sl.registerLazySingleton<SellerRemoteDataSource>(() => SellerRemoteDataSourceImpl());
+
+  // Features - Reviews
+  sl.registerFactory(() => ReviewBloc(
+        getProductReviewsUseCase: sl(),
+        addReviewUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => GetProductReviewsUseCase(sl()));
+  sl.registerLazySingleton(() => AddReviewUseCase(sl()));
+  sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(sl()));
+  sl.registerLazySingleton<ReviewRemoteDataSource>(() => ReviewRemoteDataSourceImpl());
 }

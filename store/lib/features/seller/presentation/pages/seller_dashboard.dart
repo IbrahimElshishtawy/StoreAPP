@@ -44,6 +44,13 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   ),
                   const SizedBox(height: 16),
                   _buildSalesChart(stats.dailySales),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Customer Behavior",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBehaviorStats(stats.behavior),
                 ],
               ),
             );
@@ -62,6 +69,20 @@ class _SellerDashboardState extends State<SellerDashboard> {
         _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
         const SizedBox(width: 16),
         _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
+      ],
+    );
+  }
+
+  Widget _buildBehaviorStats(dynamic behavior) {
+    return Row(
+      children: [
+        _buildStatCard("Visits", "${behavior.visits}", Colors.orange),
+        const SizedBox(width: 16),
+        _buildStatCard(
+          "Conversion Rate",
+          "${((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1)}%",
+          Colors.purple,
+        ),
       ],
     );
   }

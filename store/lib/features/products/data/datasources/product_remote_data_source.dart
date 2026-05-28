@@ -49,6 +49,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       description: json['description'],
       rating: (json['rating']?['rate'] as num?)?.toDouble() ?? 0.0,
       ratingCount: json['rating']?['count'] ?? 0,
+      isPromoted: (json['id'] as int) % 5 == 0,
     );
   }
 }
