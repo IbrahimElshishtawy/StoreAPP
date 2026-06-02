@@ -21,6 +21,8 @@ import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/reviews/presentation/bloc/review_bloc.dart';
+import 'package:store/features/chat/presentation/bloc/chat_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +48,8 @@ class Store extends StatelessWidget {
         BlocProvider<ProductBloc>(create: (_) => di.sl<ProductBloc>()),
         BlocProvider<SellerBloc>(create: (_) => di.sl<SellerBloc>()),
         BlocProvider<ThemeCubit>(create: (_) => di.sl<ThemeCubit>()),
+        BlocProvider<ReviewBloc>(create: (_) => di.sl<ReviewBloc>()),
+        BlocProvider<ChatBloc>(create: (_) => di.sl<ChatBloc>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, themeMode) {

@@ -7,6 +7,7 @@ class ProductEntity {
   final String description;
   final double rating;
   final int ratingCount;
+  final bool isPromoted;
 
   ProductEntity({
     required this.id,
@@ -17,6 +18,7 @@ class ProductEntity {
     this.description = '',
     this.rating = 0.0,
     this.ratingCount = 0,
+    this.isPromoted = false,
   });
 
   String get imageUrl => image;

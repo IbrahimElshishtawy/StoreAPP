@@ -18,6 +18,13 @@ import 'package:store/features/products/domain/usecases/product_usecases.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/reviews/domain/usecases/get_reviews_usecase.dart';
+import 'package:store/features/reviews/domain/usecases/add_review_usecase.dart';
+import 'package:store/features/reviews/domain/repositories/review_repository.dart';
+import 'package:store/features/reviews/data/repositories/review_repository_impl.dart';
+import 'package:store/features/reviews/data/datasources/review_remote_data_source.dart';
+import 'package:store/features/reviews/presentation/bloc/review_bloc.dart';
+import 'package:store/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:store/core/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -66,4 +73,17 @@ Future<void> init() async {
 
   // Features - Seller
   sl.registerFactory(() => SellerBloc());
+
+  // Features - Reviews
+  sl.registerFactory(() => ReviewBloc(
+        getReviewsUseCase: sl(),
+        addReviewUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => GetReviewsUseCase(sl()));
+  sl.registerLazySingleton(() => AddReviewUseCase(sl()));
+  sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(sl()));
+  sl.registerLazySingleton<ReviewRemoteDataSource>(() => ReviewRemoteDataSourceImpl(sl()));
+
+  // Features - Chat
+  sl.registerFactory(() => ChatBloc(firestore: sl()));
 }

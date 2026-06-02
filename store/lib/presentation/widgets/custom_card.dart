@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/features/products/presentation/pages/product_details_page.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/domain/entities/cart_item.dart';
@@ -68,12 +69,37 @@ class _CustomCardState extends State<CustomCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      margin: const EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      child: Column(
+    ProductEntity productEntity;
+    if (widget.product is ProductEntity) {
+      productEntity = widget.product;
+    } else {
+      productEntity = ProductEntity(
+        id: widget.product.id,
+        title: widget.product.title ?? '',
+        description: widget.product.description ?? '',
+        price: widget.product.price ?? 0.0,
+        image: widget.product.imageUrl ?? '',
+        category: '',
+        rating: 0.0,
+        ratingCount: 0,
+      );
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsPage(product: productEntity),
+          ),
+        );
+      },
+      child: Card(
+        color: Colors.white,
+        margin: const EdgeInsets.all(8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 4,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Stack(
@@ -152,6 +178,7 @@ class _CustomCardState extends State<CustomCard> {
           ),
         ],
       ),
+    ),
     );
   }
 }

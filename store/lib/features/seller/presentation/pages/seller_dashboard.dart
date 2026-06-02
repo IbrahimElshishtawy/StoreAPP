@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/seller/domain/entities/seller_stats.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
@@ -44,6 +45,13 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   ),
                   const SizedBox(height: 16),
                   _buildSalesChart(stats.dailySales),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Best Selling Products",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBestSellingProducts(stats.bestSellingProducts),
                 ],
               ),
             );
@@ -56,12 +64,24 @@ class _SellerDashboardState extends State<SellerDashboard> {
     );
   }
 
-  Widget _buildSummaryCards(dynamic stats) {
-    return Row(
+  Widget _buildSummaryCards(SellerStats stats) {
+    return Column(
       children: [
-        _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
-        const SizedBox(width: 16),
-        _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
+        Row(
+          children: [
+            _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
+            const SizedBox(width: 16),
+            _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            _buildStatCard("Total Profit", "\$${stats.totalProfit}", Colors.orange),
+            const SizedBox(width: 16),
+            _buildStatCard("Conv. Rate", "${stats.customerBehavior.conversionRate.toStringAsFixed(1)}%", Colors.purple),
+          ],
+        ),
       ],
     );
   }
@@ -89,6 +109,18 @@ class _SellerDashboardState extends State<SellerDashboard> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBestSellingProducts(List<BestSellingProduct> products) {
+    return Column(
+      children: products.map((product) {
+        return ListTile(
+          title: Text(product.title),
+          subtitle: Text("Sales: ${product.salesCount}"),
+          trailing: Text("\$${product.revenue}", style: const TextStyle(fontWeight: FontWeight.bold)),
+        );
+      }).toList(),
     );
   }
 

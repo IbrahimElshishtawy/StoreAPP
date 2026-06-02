@@ -4,6 +4,7 @@ import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/presentation/widgets/custom_card.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -21,16 +22,23 @@ class _ProductsPageState extends State<ProductsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductBloc, ProductState>(
+    return BlocConsumer<ProductBloc, ProductState>(
+      listener: (context, state) {
+        if (state is ProductError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
       builder: (context, state) {
         if (state is ProductLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator();
         } else if (state is ProductError) {
           return Center(child: Text('Error: ${state.message}'));
         } else if (state is ProductLoaded) {
           final products = state.products;
           if (products.isEmpty) {
-            return const Center(child: Text('No products available'));
+            return const EmptyState(message: 'No products available');
           }
 
           return GridView.builder(

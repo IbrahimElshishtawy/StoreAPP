@@ -16,6 +16,9 @@ class _SearchPageState extends State<SearchPage> {
   List<ProductModel> _allProducts = [];
   List<ProductModel> _filteredProducts = [];
   bool _isLoading = true;
+  String _selectedCategory = 'All';
+  RangeValues _priceRange = const RangeValues(0, 1000);
+  double _minRating = 0;
 
   @override
   void initState() {
@@ -38,10 +41,24 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
+  void _applyFilters() {
+    setState(() {
+      _filteredProducts = _allProducts.where((product) {
+        final matchesCategory =
+            _selectedCategory == 'All' || product.category == _selectedCategory;
+        final matchesPrice = (product.price ?? 0) >= _priceRange.start &&
+            (product.price ?? 0) <= _priceRange.end;
+        final matchesRating = (product.rating?.rate ?? 0) >= _minRating;
+        return matchesCategory && matchesPrice && matchesRating;
+      }).toList();
+    });
+  }
+
   void _filterProducts(String query) {
     final results = _allProducts.where((product) {
-      return product.title?.toLowerCase().contains(query.toLowerCase()) ??
-          false;
+      final matchesQuery =
+          product.title?.toLowerCase().contains(query.toLowerCase()) ?? false;
+      return matchesQuery;
     }).toList();
 
     setState(() => _filteredProducts = results);
@@ -58,6 +75,10 @@ class _SearchPageState extends State<SearchPage> {
             decoration: InputDecoration(
               hintText: 'Search for a product...',
               prefixIcon: const Icon(Icons.search),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () => _showFilterDialog(),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -89,6 +110,72 @@ class _SearchPageState extends State<SearchPage> {
                 ),
         ),
       ],
+    );
+  }
+
+  void _showFilterDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Category',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  DropdownButton<String>(
+                    value: _selectedCategory,
+                    isExpanded: true,
+                    items: ['All', 'electronics', 'jewelery', "men's clothing", "women's clothing"]
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
+                    onChanged: (val) {
+                      setModalState(() => _selectedCategory = val!);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                      'Price Range: \$${_priceRange.start.round()} - \$${_priceRange.end.round()}',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  RangeSlider(
+                    values: _priceRange,
+                    min: 0,
+                    max: 1000,
+                    divisions: 20,
+                    onChanged: (val) {
+                      setModalState(() => _priceRange = val);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Minimum Rating: $_minRating',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Slider(
+                    value: _minRating,
+                    min: 0,
+                    max: 5,
+                    divisions: 5,
+                    onChanged: (val) {
+                      setModalState(() => _minRating = val);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      _applyFilters();
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Apply Filters'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

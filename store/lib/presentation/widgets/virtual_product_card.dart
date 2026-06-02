@@ -1,6 +1,8 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/features/products/presentation/pages/product_details_page.dart';
 import '../models/dummy_product.dart';
 
 class VirtualProductCard extends StatelessWidget {
@@ -15,7 +17,25 @@ class VirtualProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsPage(
+              product: ProductEntity(
+                id: product.id,
+                title: product.title,
+                description: product.description,
+                price: product.price,
+                image: product.imageUrl,
+                category: product.category,
+              ),
+            ),
+          ),
+        );
+      },
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -178,6 +198,7 @@ class VirtualProductCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
