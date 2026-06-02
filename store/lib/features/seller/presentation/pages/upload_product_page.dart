@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/seller/presentation/bloc/seller_event.dart';
+import 'package:store/features/seller/presentation/bloc/seller_state.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
 
@@ -83,28 +87,12 @@ class _UploadProductPageState extends State<UploadProductPage> {
       imageUrl = await uploadImageToFirebase(_selectedImage!);
     }
 
-    setState(() => isLoading = true);
-
-    try {
-      await FirebaseFirestore.instance.collection('products').add({
-        'name': name,
-        'description': description,
-        'price': price,
-        'imageUrl': imageUrl,
-        'createdAt': Timestamp.now(),
-      });
-
-      showSnack("✅ Product uploaded successfully", color: Colors.green);
-      nameController.clear();
-      descriptionController.clear();
-      priceController.clear();
-      urlController.clear();
-      setState(() => _selectedImage = null);
-    } catch (e) {
-      showSnack("Error uploading product: $e", color: Colors.red);
-    } finally {
-      setState(() => isLoading = false);
-    }
+    context.read<SellerBloc>().add(AddProductRequested(
+          name: name,
+          description: description,
+          price: price,
+          imageUrl: imageUrl ?? '',
+        ));
   }
 
   Widget buildProductCard() {
@@ -252,12 +240,28 @@ class _UploadProductPageState extends State<UploadProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Upload Product"),
-        backgroundColor: Colors.blue[800],
-      ),
-      body: SingleChildScrollView(
+    return BlocListener<SellerBloc, SellerState>(
+      listener: (context, state) {
+        if (state is SellerStatsLoaded) {
+          showSnack("✅ Product uploaded successfully", color: Colors.green);
+          nameController.clear();
+          descriptionController.clear();
+          priceController.clear();
+          urlController.clear();
+          setState(() => _selectedImage = null);
+        } else if (state is SellerError) {
+          showSnack("Error uploading product: ${state.message}", color: Colors.red);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Upload Product"),
+          backgroundColor: Colors.blue[800],
+        ),
+        body: BlocBuilder<SellerBloc, SellerState>(
+          builder: (context, state) {
+            final isUploading = state is SellerLoading;
+            return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,7 +301,7 @@ class _UploadProductPageState extends State<UploadProductPage> {
                         value!.isEmpty ? 'Please enter price' : null,
                   ),
                   const SizedBox(height: 20),
-                  isLoading
+                  isUploading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
                           onPressed: uploadProduct,
@@ -320,6 +324,9 @@ class _UploadProductPageState extends State<UploadProductPage> {
               ),
             ),
           ],
+        ),
+            );
+          },
         ),
       ),
     );
