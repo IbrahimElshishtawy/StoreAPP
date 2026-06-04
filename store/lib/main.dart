@@ -21,6 +21,8 @@ import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
+import 'package:store/features/reviews/presentation/bloc/review_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +47,7 @@ class Store extends StatelessWidget {
         BlocProvider<CartBloc>(create: (_) => di.sl<CartBloc>()),
         BlocProvider<ProductBloc>(create: (_) => di.sl<ProductBloc>()),
         BlocProvider<SellerBloc>(create: (_) => di.sl<SellerBloc>()),
+        BlocProvider<ReviewBloc>(create: (_) => di.sl<ReviewBloc>()),
         BlocProvider<ThemeCubit>(create: (_) => di.sl<ThemeCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
@@ -62,6 +65,16 @@ class Store extends StatelessWidget {
               brightness: Brightness.dark,
               useMaterial3: true,
             ),
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en', ''),
+              Locale('ar', ''),
+            ],
+            locale: const Locale('ar', ''),
             initialRoute: '/clinic_store',
             routes: {
               '/clinic_store': (context) => const StoreView(),

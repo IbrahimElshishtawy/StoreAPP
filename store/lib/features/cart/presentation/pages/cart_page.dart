@@ -282,6 +282,28 @@ class _CartPageState extends State<CartPage> {
                               ],
                             ),
                             const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: isLoading ? null : () => placeOrder(context, state),
+                                    icon: const Icon(Icons.credit_card),
+                                    label: const Text("Stripe"),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: isLoading ? null : () => placeOrder(context, state),
+                                    icon: const Icon(Icons.payment),
+                                    label: const Text("PayPal"),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
                             ElevatedButton.icon(
                               onPressed: isLoading
                                   ? null
