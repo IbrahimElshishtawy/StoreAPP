@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/core/util/responsive_layout.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/auth/presentation/bloc/auth_state.dart';
 import 'package:store/presentation/widgets/custom_card.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -26,9 +28,14 @@ class _ProductsPageState extends State<ProductsPage> {
     return BlocBuilder<ProductBloc, ProductState>(
       builder: (context, state) {
         if (state is ProductLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator(message: 'Fetching products...');
         } else if (state is ProductError) {
-          return Center(child: Text('Error: ${state.message}'));
+          return ErrorState(
+            message: state.message,
+            onRetry: () => context.read<ProductBloc>().add(GetProductsRequested()),
+          );
+        } else if (state is ProductEmpty) {
+          return const EmptyState(message: 'No products found');
         } else if (state is ProductLoaded) {
           final products = state.products;
           final promoted = products.where((p) => p.isPromoted).toList();
@@ -46,6 +53,13 @@ class _ProductsPageState extends State<ProductsPage> {
             );
           }).toList();
 
+          int crossAxisCount = 2;
+          if (ResponsiveLayout.isDesktop(context)) {
+            crossAxisCount = 4;
+          } else if (ResponsiveLayout.isTablet(context)) {
+            crossAxisCount = 3;
+          }
+
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,12 +67,13 @@ class _ProductsPageState extends State<ProductsPage> {
                 if (promoted.isNotEmpty) ...[
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text('Promoted Products', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    child: Text('🔥 Promoted Products', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   ),
                   SizedBox(
-                    height: 250,
+                    height: 280,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       itemCount: promoted.length,
                       itemBuilder: (context, index) => SizedBox(
                         width: 200,
@@ -75,12 +90,13 @@ class _ProductsPageState extends State<ProductsPage> {
                 if (recommended.isNotEmpty) ...[
                   const Padding(
                     padding: EdgeInsets.all(16.0),
-                    child: Text('Recommended for You', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    child: Text('✨ Recommended for You', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   ),
                   SizedBox(
-                    height: 250,
+                    height: 280,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       itemCount: recommended.length,
                       itemBuilder: (context, index) => SizedBox(
                         width: 200,
@@ -96,17 +112,17 @@ class _ProductsPageState extends State<ProductsPage> {
                 ],
                 const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Text('All Products', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  child: Text('🛍️ All Products', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 ),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(8),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 0.75,
+                  padding: const EdgeInsets.all(12),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.7,
                   ),
                   itemCount: products.length,
                   itemBuilder: (context, index) {
@@ -119,6 +135,7 @@ class _ProductsPageState extends State<ProductsPage> {
                     );
                   },
                 ),
+                const SizedBox(height: 20),
               ],
             ),
           );

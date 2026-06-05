@@ -11,6 +11,7 @@ import 'package:store/presentation/models/dummy_product.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/domain/entities/cart_item.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final ProductEntity product;
@@ -32,7 +33,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }
 
   void _submitReview() {
-    if (_reviewController.text.isEmpty) return;
+    if (_reviewController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a review'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
 
     final review = Review(
       id: '',
@@ -45,110 +51,182 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
 
     context.read<ReviewBloc>().add(AddReviewRequested(review));
     _reviewController.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Review submitted successfully'), backgroundColor: Colors.green),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.product.title)),
+      appBar: AppBar(
+        title: Text(widget.product.title, style: const TextStyle(fontSize: 18)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Image.network(
-                widget.product.image,
-                height: 250,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image, size: 100),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.product.title,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            Hero(
+              tag: 'product-${widget.product.id}',
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Image.network(
+                    widget.product.image,
+                    height: 300,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, size: 100),
                   ),
                 ),
-                Text(
-                  '\$${widget.product.price}',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.product.category.toUpperCase(),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.product.title,
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.teal[50],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '\$${widget.product.price}',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              widget.product.description,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Row(
               children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProductVirtualView(
-                          product: DummyProduct(
-                            id: widget.product.id,
-                            name: widget.product.title,
-                            description: widget.product.description,
-                            price: widget.product.price,
-                            imageUrl: widget.product.image,
-                            category: widget.product.category,
-                            rating: widget.product.rating,
-                            arModelUrl: 'assets/models/product.glb',
+                const Icon(Icons.star, color: Colors.amber, size: 20),
+                const SizedBox(width: 4),
+                Text(
+                  '${widget.product.rating} (${widget.product.ratingCount} reviews)',
+                  style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Description',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.product.description,
+              style: TextStyle(fontSize: 16, color: Colors.grey[700], height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProductVirtualView(
+                            product: DummyProduct(
+                              id: widget.product.id,
+                              title: widget.product.title,
+                              description: widget.product.description,
+                              price: widget.product.price,
+                              image: widget.product.image,
+                              category: widget.product.category,
+                              arModelUrl: 'assets/models/product.glb',
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.view_in_ar),
-                  label: const Text('View in AR'),
+                      );
+                    },
+                    icon: const Icon(Icons.view_in_ar),
+                    label: const Text('View in AR'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.teal,
+                      side: const BorderSide(color: Colors.teal),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       context.read<CartBloc>().add(
                             AddToCart(CartItem(product: widget.product, quantity: 1)),
                           );
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Added to cart')),
+                        const SnackBar(content: Text('✅ Added to cart'), backgroundColor: Colors.teal),
                       );
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                    child: const Text('Add to Cart', style: TextStyle(color: Colors.white)),
+                    icon: const Icon(Icons.shopping_cart),
+                    label: const Text('Add to Cart'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
             const Text(
               'Product Video',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
-            const ProductVideoPlayer(videoUrl: 'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4'),
-            const SizedBox(height: 30),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: const ProductVideoPlayer(videoUrl: 'https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4'),
+            ),
+            const SizedBox(height: 40),
             const Text(
-              'Reviews',
+              'Customer Reviews',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             _buildReviewForm(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             _buildReviewsList(),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -156,31 +234,60 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }
 
   Widget _buildReviewForm() {
-    return Column(
-      children: [
-        TextField(
-          controller: _reviewController,
-          decoration: const InputDecoration(
-            hintText: 'Write a review...',
-            border: OutlineInputBorder(),
-          ),
-          maxLines: 2,
-        ),
-        Row(
-          children: [
-            const Text('Rating: '),
-            DropdownButton<double>(
-              value: _rating,
-              items: [1.0, 2.0, 3.0, 4.0, 5.0]
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e.toString())))
-                  .toList(),
-              onChanged: (val) => setState(() => _rating = val!),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Write a Review', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _reviewController,
+            decoration: InputDecoration(
+              hintText: 'Share your thoughts about the product...',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             ),
-            const Spacer(),
-            ElevatedButton(onPressed: _submitReview, child: const Text('Submit')),
-          ],
-        ),
-      ],
+            maxLines: 3,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Text('Rating: '),
+              const SizedBox(width: 8),
+              DropdownButton<double>(
+                value: _rating,
+                underline: const SizedBox(),
+                items: [1.0, 2.0, 3.0, 4.0, 5.0]
+                    .map((e) => DropdownMenuItem(value: e, child: Row(
+                      children: [
+                        Text(e.toString()),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                      ],
+                    )))
+                    .toList(),
+                onChanged: (val) => setState(() => _rating = val!),
+              ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: _submitReview,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Post Review'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -188,32 +295,54 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     return BlocBuilder<ReviewBloc, ReviewState>(
       builder: (context, state) {
         if (state is ReviewLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator(message: 'Loading reviews...');
         } else if (state is ReviewsLoaded) {
           if (state.reviews.isEmpty) {
-            return const Text('No reviews yet.');
+            return const Center(child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Text('No reviews yet. Be the first to review!', style: TextStyle(color: Colors.grey)),
+            ));
           }
-          return ListView.builder(
+          return ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: state.reviews.length,
+            separatorBuilder: (context, index) => const Divider(height: 32),
             itemBuilder: (context, index) {
               final review = state.reviews[index];
-              return ListTile(
-                title: Text(review.userName),
-                subtitle: Text(review.comment),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    Text(review.rating.toString()),
-                  ],
-                ),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Colors.teal[100],
+                        child: Text(review.userName[0], style: const TextStyle(color: Colors.teal, fontSize: 12)),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(review.userName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      const Spacer(),
+                      Row(
+                        children: List.generate(5, (i) => Icon(
+                          Icons.star,
+                          color: i < review.rating ? Colors.amber : Colors.grey[300],
+                          size: 14,
+                        )),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(review.comment, style: TextStyle(color: Colors.grey[700])),
+                ],
               );
             },
           );
         } else if (state is ReviewError) {
-          return Text('Error: ${state.message}');
+          return ErrorState(
+            message: state.message,
+            onRetry: () => context.read<ReviewBloc>().add(GetProductReviewsRequested(widget.product.id)),
+          );
         }
         return const SizedBox();
       },

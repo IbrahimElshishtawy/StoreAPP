@@ -4,6 +4,7 @@ class DummyProduct extends ProductEntity {
   final bool hasVr;
   final String? dealTag;
   final double? originalPrice;
+  final String? arModelUrl;
 
   DummyProduct({
     required super.id,
@@ -15,6 +16,7 @@ class DummyProduct extends ProductEntity {
     this.hasVr = false,
     this.dealTag,
     this.originalPrice,
+    this.arModelUrl,
   });
 
   @override
@@ -32,6 +34,7 @@ final List<DummyProduct> dummyProducts = [
     hasVr: true,
     dealTag: 'Best Value',
     category: 'Home Decor',
+    arModelUrl: 'assets/models/vase.glb',
   ),
   DummyProduct(
     id: '2',
@@ -52,6 +55,7 @@ final List<DummyProduct> dummyProducts = [
     hasVr: true,
     dealTag: 'Price Drop',
     category: 'Furniture',
+    arModelUrl: 'assets/models/chair.glb',
   ),
   DummyProduct(
     id: '4',
@@ -61,6 +65,7 @@ final List<DummyProduct> dummyProducts = [
     image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80&w=600',
     hasVr: true,
     category: 'Lighting',
+    arModelUrl: 'assets/models/lamp.glb',
   ),
   DummyProduct(
     id: '5',
@@ -81,5 +86,6 @@ final List<DummyProduct> dummyProducts = [
     image: 'https://images.unsplash.com/photo-1616401784845-180882ba9ba8?auto=format&fit=crop&q=80&w=600',
     hasVr: true,
     category: 'Home Decor',
+    arModelUrl: 'assets/models/organizer.glb',
   ),
 ];

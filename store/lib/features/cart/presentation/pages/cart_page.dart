@@ -9,7 +9,7 @@ import 'package:store/features/cart/presentation/bloc/cart_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:store/core/network/payment_service.dart';
-import 'package:store/core/injection/injection_container.dart' as di;
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -20,8 +20,9 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   bool isLoading = false;
+  final TextEditingController _discountController = TextEditingController();
 
-  Future<void> placeOrder(BuildContext context, CartState state) async {
+  Future<void> placeOrder(BuildContext context, CartState state, {required String method}) async {
     if (state.items.isEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -42,9 +43,16 @@ class _CartPageState extends State<CartPage> {
     setState(() => isLoading = true);
 
     try {
-      // Integration with Payment Service
-      final paymentService = PaymentService(); // Or get from DI
-      final paymentSuccess = await paymentService.processStripePayment(state.totalAmount);
+      final paymentService = PaymentService();
+      bool paymentSuccess = false;
+
+      final finalAmount = state.totalAmount - state.discountAmount;
+
+      if (method == 'stripe') {
+        paymentSuccess = await paymentService.processStripePayment(finalAmount);
+      } else {
+        paymentSuccess = await paymentService.processPayPalPayment(finalAmount);
+      }
 
       if (!paymentSuccess) {
         throw Exception("Payment failed");
@@ -66,7 +74,9 @@ class _CartPageState extends State<CartPage> {
         'orderId': orderRef.id,
         'userId': user.uid,
         'items': items,
-        'totalPrice': state.totalAmount,
+        'totalPrice': finalAmount,
+        'discountCode': state.discountCode,
+        'paymentMethod': method,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -95,7 +105,7 @@ class _CartPageState extends State<CartPage> {
         context,
       ).showSnackBar(SnackBar(content: Text("❌ Failed to place order: $e")));
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -105,6 +115,10 @@ class _CartPageState extends State<CartPage> {
       builder: (context, state) {
         final cartItems = state.items;
 
+        if (isLoading) {
+          return const Scaffold(body: LoadingIndicator(message: 'Processing your order...'));
+        }
+
         return Scaffold(
           appBar: AppBar(
             title: Row(
@@ -112,34 +126,22 @@ class _CartPageState extends State<CartPage> {
                 const Text("Your Cart"),
                 const SizedBox(width: 8),
                 CircleAvatar(
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.teal,
                   radius: 12,
                   child: Text(
                     cartItems.length.toString(),
-                    style: const TextStyle(fontSize: 12, color: Colors.teal),
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
                   ),
                 ),
               ],
             ),
-            backgroundColor: const Color.fromARGB(255, 230, 230, 230),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
           ),
           body: cartItems.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        size: 60,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Your cart is empty',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    ],
-                  ),
+              ? const EmptyState(
+                  message: 'Your cart is empty',
+                  icon: Icons.shopping_cart_outlined,
                 )
               : SafeArea(
                   child: Column(
@@ -156,6 +158,7 @@ class _CartPageState extends State<CartPage> {
                                 horizontal: 12,
                                 vertical: 6,
                               ),
+                              elevation: 2,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -178,7 +181,7 @@ class _CartPageState extends State<CartPage> {
                                     ),
                                   ),
                                 ),
-                                title: Text(product.title),
+                                title: Text(product.title, maxLines: 1, overflow: TextOverflow.ellipsis),
                                 subtitle: Text('\$${product.price}'),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -186,6 +189,7 @@ class _CartPageState extends State<CartPage> {
                                     IconButton(
                                       icon: const Icon(
                                         Icons.remove_circle_outline,
+                                        color: Colors.redAccent,
                                       ),
                                       onPressed: () {
                                         if (item.quantity == 1) {
@@ -232,11 +236,12 @@ class _CartPageState extends State<CartPage> {
                                     ),
                                     Text(
                                       item.quantity.toString(),
-                                      style: const TextStyle(fontSize: 16),
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                     ),
                                     IconButton(
                                       icon: const Icon(
                                         Icons.add_circle_outline,
+                                        color: Colors.teal,
                                       ),
                                       onPressed: () =>
                                           context.read<CartBloc>().add(
@@ -254,9 +259,54 @@ class _CartPageState extends State<CartPage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _discountController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Discount Code (SAVE10)',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    context.read<CartBloc>().add(ApplyDiscountCode(_discountController.text.trim()));
+                                  },
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+                                  child: const Text('Apply'),
+                                ),
+                              ],
+                            ),
+                            if (state.discountAmount > 0)
+                               Padding(
+                                 padding: const EdgeInsets.only(top: 8.0),
+                                 child: Row(
+                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                   children: [
+                                     const Text('Discount:', style: TextStyle(color: Colors.green)),
+                                     Text('-\$${state.discountAmount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.green)),
+                                   ],
+                                 ),
+                               ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 10, spreadRadius: 2),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -267,71 +317,49 @@ class _CartPageState extends State<CartPage> {
                                 const Text(
                                   'Total:',
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 Text(
-                                  '\$${state.totalAmount.toStringAsFixed(2)}',
+                                  '\$${(state.totalAmount - state.discountAmount).toStringAsFixed(2)}',
                                   style: const TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: Color.fromARGB(255, 56, 124, 110),
+                                    color: Colors.teal,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             Row(
                               children: [
                                 Expanded(
                                   child: ElevatedButton.icon(
-                                    onPressed: isLoading ? null : () => placeOrder(context, state),
+                                    onPressed: isLoading ? null : () => placeOrder(context, state, method: 'stripe'),
                                     icon: const Icon(Icons.credit_card),
                                     label: const Text("Stripe"),
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.indigo,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: ElevatedButton.icon(
-                                    onPressed: isLoading ? null : () => placeOrder(context, state),
+                                    onPressed: isLoading ? null : () => placeOrder(context, state, method: 'paypal'),
                                     icon: const Icon(Icons.payment),
                                     label: const Text("PayPal"),
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                    ),
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              onPressed: isLoading
-                                  ? null
-                                  : () => placeOrder(context, state),
-                              icon: isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.check_circle_outline),
-                              label: Text(
-                                isLoading ? "Placing Order..." : "Place Order",
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                textStyle: const TextStyle(fontSize: 16),
-                              ),
                             ),
                           ],
                         ),
