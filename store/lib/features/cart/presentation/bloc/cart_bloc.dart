@@ -2,9 +2,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/cart/domain/entities/cart_item.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
+import 'package:store/features/cart/domain/usecases/place_order_usecase.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
-  CartBloc() : super(CartState()) {
+  final PlaceOrderUseCase placeOrderUseCase;
+
+  CartBloc({required this.placeOrderUseCase}) : super(CartState()) {
     on<AddToCart>((event, emit) {
       final updatedItems = List<CartItem>.from(state.items);
       final index = updatedItems.indexWhere((i) => i.product.id == event.item.product.id);
@@ -21,6 +24,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       emit(state.copyWith(
         items: updatedItems,
         totalAmount: _calculateTotal(updatedItems),
+        status: CartStatus.initial,
       ));
     });
 
@@ -29,6 +33,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       emit(state.copyWith(
         items: updatedItems,
         totalAmount: _calculateTotal(updatedItems),
+        status: CartStatus.initial,
       ));
     });
 
@@ -44,6 +49,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         emit(state.copyWith(
           items: updatedItems,
           totalAmount: _calculateTotal(updatedItems),
+          status: CartStatus.initial,
         ));
       }
     });
@@ -57,7 +63,29 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       emit(state.copyWith(
         discountCode: event.code,
         discountAmount: discount,
+        status: CartStatus.initial,
       ));
+    });
+
+    on<PlaceOrderRequested>((event, emit) async {
+      emit(state.copyWith(status: CartStatus.loading));
+
+      final result = await placeOrderUseCase(
+        items: state.items,
+        totalAmount: state.finalAmount,
+        paymentMethod: event.paymentMethod,
+        discountApplied: state.discountAmount,
+      );
+
+      result.fold(
+        (failure) => emit(state.copyWith(
+          status: CartStatus.error,
+          errorMessage: failure.message,
+        )),
+        (_) {
+          emit(CartState(status: CartStatus.success));
+        },
+      );
     });
 
     on<ClearCart>((event, emit) {

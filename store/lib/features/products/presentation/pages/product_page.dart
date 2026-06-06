@@ -6,6 +6,7 @@ import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/auth/presentation/bloc/auth_state.dart';
 import 'package:store/presentation/widgets/custom_card.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -26,9 +27,14 @@ class _ProductsPageState extends State<ProductsPage> {
     return BlocBuilder<ProductBloc, ProductState>(
       builder: (context, state) {
         if (state is ProductLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator();
         } else if (state is ProductError) {
-          return Center(child: Text('Error: ${state.message}'));
+          return ErrorState(
+            message: state.message,
+            onRetry: () => context.read<ProductBloc>().add(GetProductsRequested()),
+          );
+        } else if (state is ProductEmpty) {
+          return const EmptyState(message: 'No products found at the moment.');
         } else if (state is ProductLoaded) {
           final products = state.products;
           final promoted = products.where((p) => p.isPromoted).toList();
@@ -123,7 +129,10 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
           );
         }
-        return const Center(child: Text('Start exploring products!'));
+        return const EmptyState(
+          message: 'Start exploring products!',
+          icon: Icons.explore_outlined,
+        );
       },
     );
   }

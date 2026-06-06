@@ -23,4 +23,9 @@ class ApplyDiscountCode extends CartEvent {
   ApplyDiscountCode(this.code);
 }
 
+class PlaceOrderRequested extends CartEvent {
+  final String paymentMethod;
+  PlaceOrderRequested(this.paymentMethod);
+}
+
 class ClearCart extends CartEvent {}

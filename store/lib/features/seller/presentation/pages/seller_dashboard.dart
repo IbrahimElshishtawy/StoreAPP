@@ -51,6 +51,13 @@ class _SellerDashboardState extends State<SellerDashboard> {
                   ),
                   const SizedBox(height: 16),
                   _buildBehaviorStats(stats.behavior),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "Best Selling Products",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBestSellingProducts(stats.bestSellingProducts),
                 ],
               ),
             );
@@ -63,25 +70,41 @@ class _SellerDashboardState extends State<SellerDashboard> {
     );
   }
 
-  Widget _buildSummaryCards(dynamic stats) {
-    return Row(
+  Widget _buildSummaryCards(SellerStats stats) {
+    return Column(
       children: [
-        _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
-        const SizedBox(width: 16),
-        _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
+        Row(
+          children: [
+            _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
+            const SizedBox(width: 16),
+            _buildStatCard("Total Profit", "\$${stats.totalProfit}", Colors.teal),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
+            const SizedBox(width: 16),
+            _buildStatCard(
+              "Conversion",
+              "${((stats.behavior.conversions / stats.behavior.visits) * 100).toStringAsFixed(1)}%",
+              Colors.purple,
+            ),
+          ],
+        ),
       ],
     );
   }
 
-  Widget _buildBehaviorStats(dynamic behavior) {
+  Widget _buildBehaviorStats(CustomerBehavior behavior) {
     return Row(
       children: [
         _buildStatCard("Visits", "${behavior.visits}", Colors.orange),
         const SizedBox(width: 16),
         _buildStatCard(
-          "Conversion Rate",
-          "${((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1)}%",
-          Colors.purple,
+          "Purchases",
+          "${behavior.conversions}",
+          Colors.red,
         ),
       ],
     );
@@ -109,6 +132,61 @@ class _SellerDashboardState extends State<SellerDashboard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildBestSellingProducts(List<ProductEntity> products) {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return Container(
+            width: 250,
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white10,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    product.image,
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        product.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "\$${product.price}",
+                        style: const TextStyle(color: Colors.teal),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
