@@ -6,10 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:store/core/network/payment_service.dart';
-import 'package:store/core/injection/injection_container.dart' as di;
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -19,91 +15,48 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
-  bool isLoading = false;
+  final TextEditingController _discountController = TextEditingController();
 
-  Future<void> placeOrder(BuildContext context, CartState state) async {
-    if (state.items.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("🛒 Your cart is empty")));
-      return;
-    }
+  @override
+  void dispose() {
+    _discountController.dispose();
+    super.dispose();
+  }
 
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("⚠️ You must be logged in to place an order"),
-        ),
-      );
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      // Integration with Payment Service
-      final paymentService = PaymentService(); // Or get from DI
-      final paymentSuccess = await paymentService.processStripePayment(state.totalAmount);
-
-      if (!paymentSuccess) {
-        throw Exception("Payment failed");
-      }
-
-      final orderRef = FirebaseFirestore.instance.collection('orders').doc();
-      final items = state.items
-          .map(
-            (item) => {
-              'id': item.product.id,
-              'title': item.product.title,
-              'price': item.product.price,
-              'quantity': item.quantity,
-            },
-          )
-          .toList();
-
-      await orderRef.set({
-        'orderId': orderRef.id,
-        'userId': user.uid,
-        'items': items,
-        'totalPrice': state.totalAmount,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      if (!mounted) return;
-      context.read<CartBloc>().add(ClearCart());
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Order placed successfully!")),
-      );
-
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("✅ Order Placed"),
-          content: const Text("Your order has been placed successfully!"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ Failed to place order: $e")));
-    } finally {
-      setState(() => isLoading = false);
-    }
+  void _placeOrder(BuildContext context, {required bool isStripe}) {
+    context.read<CartBloc>().add(PlaceOrderRequested(isStripe ? 'Stripe' : 'PayPal'));
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CartBloc, CartState>(
+    return BlocConsumer<CartBloc, CartState>(
+      listener: (context, state) {
+        if (state.status == CartStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("✅ Order placed successfully!")),
+          );
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text("✅ Order Placed"),
+              content: const Text("Your order has been placed successfully!"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("OK"),
+                ),
+              ],
+            ),
+          );
+        } else if (state.status == CartStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("❌ Failed: ${state.errorMessage}"), backgroundColor: Colors.red),
+          );
+        }
+      },
       builder: (context, state) {
         final cartItems = state.items;
+        final isLoading = state.status == CartStatus.loading;
 
         return Scaffold(
           appBar: AppBar(
@@ -123,7 +76,7 @@ class _CartPageState extends State<CartPage> {
             ),
             backgroundColor: const Color.fromARGB(255, 230, 230, 230),
           ),
-          body: cartItems.isEmpty
+          body: cartItems.isEmpty && state.status != CartStatus.loading
               ? const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -144,6 +97,7 @@ class _CartPageState extends State<CartPage> {
               : SafeArea(
                   child: Column(
                     children: [
+                      if (isLoading) const LinearProgressIndicator(),
                       Expanded(
                         child: ListView.builder(
                           itemCount: cartItems.length,
@@ -262,6 +216,45 @@ class _CartPageState extends State<CartPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _discountController,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Enter Coupon Code',
+                                      border: OutlineInputBorder(),
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: isLoading ? null : () {
+                                    context.read<CartBloc>().add(ApplyDiscountCode(_discountController.text.trim()));
+                                  },
+                                  child: const Text('Apply'),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            if (state.discountAmount > 0) ...[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Subtotal:'),
+                                  Text('\$${state.totalAmount.toStringAsFixed(2)}'),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Discount:', style: TextStyle(color: Colors.red)),
+                                  Text('-\$${state.discountAmount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                              const Divider(),
+                            ],
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 const Text(
@@ -272,7 +265,7 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                 ),
                                 Text(
-                                  '\$${state.totalAmount.toStringAsFixed(2)}',
+                                  '\$${state.finalAmount.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -286,7 +279,7 @@ class _CartPageState extends State<CartPage> {
                               children: [
                                 Expanded(
                                   child: ElevatedButton.icon(
-                                    onPressed: isLoading ? null : () => placeOrder(context, state),
+                                    onPressed: isLoading ? null : () => _placeOrder(context, isStripe: true),
                                     icon: const Icon(Icons.credit_card),
                                     label: const Text("Stripe"),
                                     style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
@@ -295,43 +288,13 @@ class _CartPageState extends State<CartPage> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: ElevatedButton.icon(
-                                    onPressed: isLoading ? null : () => placeOrder(context, state),
+                                    onPressed: isLoading ? null : () => _placeOrder(context, isStripe: false),
                                     icon: const Icon(Icons.payment),
                                     label: const Text("PayPal"),
                                     style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton.icon(
-                              onPressed: isLoading
-                                  ? null
-                                  : () => placeOrder(context, state),
-                              icon: isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.check_circle_outline),
-                              label: Text(
-                                isLoading ? "Placing Order..." : "Place Order",
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.teal,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                textStyle: const TextStyle(fontSize: 16),
-                              ),
                             ),
                           ],
                         ),
