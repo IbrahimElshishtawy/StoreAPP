@@ -7,12 +7,11 @@ import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
-import 'package:store/features/auth/domain/entities/user_entity.dart';
 import 'package:store/features/products/presentation/pages/search_page.dart';
 import 'package:store/features/cart/presentation/pages/cart_page.dart';
 import 'package:store/features/cart/presentation/pages/order_history_page.dart';
 import 'package:store/features/products/presentation/pages/product_page.dart';
-import 'package:store/features/auth/presentation/pages/profile_page.dart';
+import 'package:store/features/chat/presentation/pages/chat_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -73,7 +72,7 @@ class _HomePageState extends State<HomePage> {
                             title: const Text('Profile'),
                             onTap: () {
                               Navigator.pop(context);
-                              // Handle Profile Page
+                              Navigator.pushNamed(context, '/profile');
                             },
                           ),
                           const Divider(thickness: 1.2),
@@ -101,6 +100,14 @@ class _HomePageState extends State<HomePage> {
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderHistoryPage()));
                             },
                           ),
+                          ListTile(
+                            leading: const Icon(Icons.chat_outlined, color: Colors.blue),
+                            title: const Text('Live Support'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPage()));
+                            },
+                          ),
                           const Divider(thickness: 1.2),
                           ListTile(
                             leading: const Icon(Icons.logout, color: Colors.red),
@@ -122,7 +129,7 @@ class _HomePageState extends State<HomePage> {
               elevation: 0,
               centerTitle: true,
               title: const Text(
-                'New Trend',
+                'Clinic Store',
                 style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               actions: [

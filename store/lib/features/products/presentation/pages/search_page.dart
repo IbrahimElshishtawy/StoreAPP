@@ -4,6 +4,7 @@ import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/presentation/widgets/custom_card.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -138,9 +139,9 @@ class _SearchPageState extends State<SearchPage> {
           child: BlocBuilder<ProductBloc, ProductState>(
             builder: (context, state) {
               if (state is ProductLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const LoadingIndicator();
               } else if (state is ProductEmpty) {
-                return const Center(child: Text('No products found'));
+                return const EmptyState(message: 'No products found');
               } else if (state is ProductLoaded) {
                 return GridView.builder(
                   padding: const EdgeInsets.all(8),
@@ -161,7 +162,10 @@ class _SearchPageState extends State<SearchPage> {
                   },
                 );
               } else if (state is ProductError) {
-                return Center(child: Text('Error: ${state.message}'));
+                return ErrorState(
+                  message: state.message,
+                  onRetry: _onSearchChanged,
+                );
               }
               return const Center(child: Text('Search for something...'));
             },

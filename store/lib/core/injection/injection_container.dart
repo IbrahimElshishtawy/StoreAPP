@@ -16,7 +16,17 @@ import 'package:store/features/products/data/repositories/product_repository_imp
 import 'package:store/features/products/domain/repositories/product_repository.dart';
 import 'package:store/features/products/domain/usecases/product_usecases.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
+import 'package:store/features/cart/data/datasources/cart_remote_data_source.dart';
+import 'package:store/features/cart/data/repositories/cart_repository_impl.dart';
+import 'package:store/features/cart/domain/repositories/cart_repository.dart';
+import 'package:store/features/cart/domain/usecases/place_order_usecase.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
+import 'package:store/features/chat/data/datasources/chat_remote_data_source.dart';
+import 'package:store/features/chat/data/repositories/chat_repository_impl.dart';
+import 'package:store/features/chat/domain/repositories/chat_repository.dart';
+import 'package:store/features/chat/domain/usecases/send_message_usecase.dart';
+import 'package:store/features/chat/domain/usecases/stream_messages_usecase.dart';
+import 'package:store/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:store/features/seller/data/datasources/seller_remote_data_source.dart';
 import 'package:store/features/seller/data/repositories/seller_repository_impl.dart';
 import 'package:store/features/seller/domain/repositories/seller_repository.dart';
@@ -71,7 +81,17 @@ Future<void> init() async {
   sl.registerLazySingleton<ProductRemoteDataSource>(() => ProductRemoteDataSourceImpl(sl()));
 
   // Features - Cart
-  sl.registerFactory(() => CartBloc());
+  sl.registerFactory(() => CartBloc(placeOrderUseCase: sl()));
+  sl.registerLazySingleton(() => PlaceOrderUseCase(sl()));
+  sl.registerLazySingleton<CartRepository>(() => CartRepositoryImpl(remoteDataSource: sl()));
+  sl.registerLazySingleton<CartRemoteDataSource>(() => CartRemoteDataSourceImpl(firestore: sl(), auth: sl()));
+
+  // Features - Chat
+  sl.registerFactory(() => ChatBloc(streamMessagesUseCase: sl(), sendMessageUseCase: sl()));
+  sl.registerLazySingleton(() => StreamMessagesUseCase(sl()));
+  sl.registerLazySingleton(() => SendMessageUseCase(sl()));
+  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(remoteDataSource: sl()));
+  sl.registerLazySingleton<ChatRemoteDataSource>(() => ChatRemoteDataSourceImpl(firestore: sl()));
 
   // Features - Seller
   sl.registerFactory(() => SellerBloc(

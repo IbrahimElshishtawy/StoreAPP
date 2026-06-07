@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class OrderHistoryPage extends StatelessWidget {
   const OrderHistoryPage({super.key});
@@ -11,7 +12,7 @@ class OrderHistoryPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(" Order History"),
+        title: const Text("Order History"),
         backgroundColor: Colors.teal,
         centerTitle: true,
       ),
@@ -23,22 +24,20 @@ class OrderHistoryPage extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text("❌ Error: ${snapshot.error}"));
+            return ErrorState(
+              message: "Error: ${snapshot.error}",
+              onRetry: () {},
+            );
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           }
 
           final orders = snapshot.data!.docs;
 
           if (orders.isEmpty) {
-            return const Center(
-              child: Text(
-                "🛒 You haven't placed any orders yet.",
-                style: TextStyle(fontSize: 16),
-              ),
-            );
+            return const EmptyState(message: "You haven't placed any orders yet.");
           }
 
           return ListView.builder(
@@ -47,7 +46,8 @@ class OrderHistoryPage extends StatelessWidget {
               final order = orders[index].data() as Map<String, dynamic>;
               final items = List<Map<String, dynamic>>.from(order['items']);
               final totalPrice = order['totalPrice'];
-              final orderTime = (order['timestamp'] as Timestamp).toDate();
+              final timestamp = order['timestamp'];
+              final orderTime = timestamp is Timestamp ? timestamp.toDate() : DateTime.now();
 
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -62,22 +62,11 @@ class OrderHistoryPage extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    "${items.length} items • \$${totalPrice.toStringAsFixed(2)}\n${orderTime.toLocal()}",
+                    "${items.length} items • \$${totalPrice.toStringAsFixed(2)}\n$orderTime",
                     style: const TextStyle(fontSize: 12),
                   ),
                   children: items.map((item) {
                     return ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          item['imageUrl'],
-                          width: 50,
-                          height: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.image_not_supported),
-                        ),
-                      ),
                       title: Text(item['title']),
                       subtitle: Text("Quantity: ${item['quantity']}"),
                       trailing: Text(
