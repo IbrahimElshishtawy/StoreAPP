@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:store/core/network/dio_client.dart';
+import 'package:store/core/network/payment_service.dart';
 import 'package:store/core/util/two_factor_auth_service.dart';
 import 'package:store/core/util/push_notification_service.dart';
 import 'package:store/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -16,6 +17,10 @@ import 'package:store/features/products/data/repositories/product_repository_imp
 import 'package:store/features/products/domain/repositories/product_repository.dart';
 import 'package:store/features/products/domain/usecases/product_usecases.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
+import 'package:store/features/cart/data/datasources/cart_remote_data_source.dart';
+import 'package:store/features/cart/data/repositories/cart_repository_impl.dart';
+import 'package:store/features/cart/domain/repositories/cart_repository.dart';
+import 'package:store/features/cart/domain/usecases/place_order_usecase.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/seller/data/datasources/seller_remote_data_source.dart';
 import 'package:store/features/seller/data/repositories/seller_repository_impl.dart';
@@ -38,6 +43,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => Dio());
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
+  sl.registerLazySingleton(() => PaymentService());
 
   // Core
   sl.registerLazySingleton(() => DioClient(sl(), sl()));
@@ -71,7 +77,14 @@ Future<void> init() async {
   sl.registerLazySingleton<ProductRemoteDataSource>(() => ProductRemoteDataSourceImpl(sl()));
 
   // Features - Cart
-  sl.registerFactory(() => CartBloc());
+  sl.registerFactory(() => CartBloc(placeOrderUseCase: sl()));
+  sl.registerLazySingleton(() => PlaceOrderUseCase(sl()));
+  sl.registerLazySingleton<CartRepository>(() => CartRepositoryImpl(sl()));
+  sl.registerLazySingleton<CartRemoteDataSource>(() => CartRemoteDataSourceImpl(
+    firestore: sl(),
+    auth: sl(),
+    paymentService: sl(),
+  ));
 
   // Features - Seller
   sl.registerFactory(() => SellerBloc(
