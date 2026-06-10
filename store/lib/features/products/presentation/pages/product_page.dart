@@ -6,6 +6,7 @@ import 'package:store/features/products/presentation/bloc/product_state.dart';
 import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/auth/presentation/bloc/auth_state.dart';
 import 'package:store/presentation/widgets/custom_card.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -18,17 +19,30 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   void initState() {
     super.initState();
+    _loadProducts();
+  }
+
+  void _loadProducts() {
     context.read<ProductBloc>().add(GetProductsRequested());
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProductBloc, ProductState>(
+    return BlocConsumer<ProductBloc, ProductState>(
+      listener: (context, state) {
+        if (state is ProductError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+          );
+        }
+      },
       builder: (context, state) {
         if (state is ProductLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator();
         } else if (state is ProductError) {
-          return Center(child: Text('Error: ${state.message}'));
+          return ErrorState(message: state.message, onRetry: _loadProducts);
+        } else if (state is ProductEmpty) {
+          return const EmptyState(message: "No products available at the moment.");
         } else if (state is ProductLoaded) {
           final products = state.products;
           final promoted = products.where((p) => p.isPromoted).toList();
@@ -46,80 +60,84 @@ class _ProductsPageState extends State<ProductsPage> {
             );
           }).toList();
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (promoted.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Promoted Products', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  ),
-                  SizedBox(
-                    height: 250,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: promoted.length,
-                      itemBuilder: (context, index) => SizedBox(
-                        width: 200,
-                        child: CustomCard(
-                          product: promoted[index],
-                          title: promoted[index].title,
-                          price: '\$${promoted[index].price}',
-                          image: promoted[index].image,
+          return RefreshIndicator(
+            onRefresh: () async => _loadProducts(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (promoted.isNotEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('Promoted Products', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    ),
+                    SizedBox(
+                      height: 250,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: promoted.length,
+                        itemBuilder: (context, index) => SizedBox(
+                          width: 200,
+                          child: CustomCard(
+                            product: promoted[index],
+                            title: promoted[index].title,
+                            price: '\$${promoted[index].price}',
+                            image: promoted[index].image,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-                if (recommended.isNotEmpty) ...[
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text('Recommended for You', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  ),
-                  SizedBox(
-                    height: 250,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: recommended.length,
-                      itemBuilder: (context, index) => SizedBox(
-                        width: 200,
-                        child: CustomCard(
-                          product: recommended[index],
-                          title: recommended[index].title,
-                          price: '\$${recommended[index].price}',
-                          image: recommended[index].image,
+                  ],
+                  if (recommended.isNotEmpty) ...[
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('Recommended for You', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    ),
+                    SizedBox(
+                      height: 250,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: recommended.length,
+                        itemBuilder: (context, index) => SizedBox(
+                          width: 200,
+                          child: CustomCard(
+                            product: recommended[index],
+                            title: recommended[index].title,
+                            price: '\$${recommended[index].price}',
+                            image: recommended[index].image,
+                          ),
                         ),
                       ),
                     ),
+                  ],
+                  const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text('All Products', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  ),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(8),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      childAspectRatio: 0.75,
+                    ),
+                    itemCount: products.length,
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      return CustomCard(
+                        product: product,
+                        title: product.title,
+                        price: '\$${product.price.toStringAsFixed(2)}',
+                        image: product.image,
+                      );
+                    },
                   ),
                 ],
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('All Products', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                ),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(8),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 0.75,
-                  ),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return CustomCard(
-                      product: product,
-                      title: product.title,
-                      price: '\$${product.price.toStringAsFixed(2)}',
-                      image: product.image,
-                    );
-                  },
-                ),
-              ],
+              ),
             ),
           );
         }
