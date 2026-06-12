@@ -4,6 +4,7 @@ import 'package:store/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:store/features/auth/presentation/bloc/auth_state.dart';
 import 'package:store/features/auth/presentation/bloc/auth_event.dart';
 import 'package:store/features/auth/presentation/widgets/login_form.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class LoginPage extends StatelessWidget {
   static String id = 'loginPage';
@@ -62,7 +63,7 @@ class LoginPage extends StatelessWidget {
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const LoadingIndicator();
             }
             return const WidgetLogin();
           },
