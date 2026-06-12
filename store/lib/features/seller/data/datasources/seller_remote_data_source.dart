@@ -1,4 +1,7 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:store/features/seller/domain/entities/seller_stats.dart';
 import 'package:store/features/products/domain/entities/product_entity.dart';
 
@@ -11,9 +14,19 @@ abstract class SellerRemoteDataSource {
 }
 
 class SellerRemoteDataSourceImpl implements SellerRemoteDataSource {
+  final FirebaseFirestore firestore;
+  final FirebaseStorage storage;
+  final FirebaseAuth auth;
+
+  SellerRemoteDataSourceImpl({
+    required this.firestore,
+    required this.storage,
+    required this.auth,
+  });
+
   @override
   Future<SellerStats> getSellerStats() async {
-    // Mock data with enriched statistics
+    // Mock data with enriched statistics for now as it aggregates many things
     return SellerStats(
       totalSales: 15000.0,
       totalProfit: 4500.0,
@@ -45,21 +58,54 @@ class SellerRemoteDataSourceImpl implements SellerRemoteDataSource {
 
   @override
   Future<void> addProduct(ProductEntity product, File? imageFile) async {
-    // Implement Firestore logic
+    String imageUrl = product.image;
+    if (imageFile != null) {
+      final ref = storage.ref().child('products/${DateTime.now().toIso8601String()}');
+      await ref.putFile(imageFile);
+      imageUrl = await ref.getDownloadURL();
+    }
+
+    await firestore.collection('products').add({
+      'sellerId': auth.currentUser?.uid,
+      'title': product.title,
+      'price': product.price,
+      'description': product.description,
+      'category': product.category,
+      'image': imageUrl,
+      'rating': product.rating,
+      'isPromoted': product.isPromoted,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
   Future<void> updateProduct(ProductEntity product, File? imageFile) async {
-    // Implement Firestore logic
+    String imageUrl = product.image;
+    if (imageFile != null) {
+      final ref = storage.ref().child('products/${product.id}');
+      await ref.putFile(imageFile);
+      imageUrl = await ref.getDownloadURL();
+    }
+
+    await firestore.collection('products').doc(product.id).update({
+      'title': product.title,
+      'price': product.price,
+      'description': product.description,
+      'category': product.category,
+      'image': imageUrl,
+      'isPromoted': product.isPromoted,
+    });
   }
 
   @override
   Future<void> deleteProduct(String productId) async {
-    // Implement Firestore logic
+    await firestore.collection('products').doc(productId).delete();
   }
 
   @override
   Future<void> promoteProduct(String productId) async {
-    // Implement promotion logic
+    await firestore.collection('products').doc(productId).update({
+      'isPromoted': true,
+    });
   }
 }
