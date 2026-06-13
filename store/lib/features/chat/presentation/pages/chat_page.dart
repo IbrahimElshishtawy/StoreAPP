@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 import 'package:store/features/chat/domain/entities/chat_message.dart';
 
 class ChatPage extends StatefulWidget {
@@ -37,7 +38,22 @@ class _ChatPageState extends State<ChatPage> {
                   .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const LoadingIndicator();
+                }
+                if (snapshot.hasError) {
+                  return ErrorState(
+                    message: "Failed to load messages",
+                    onRetry: () => setState(() {}),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const EmptyState(
+                    message: "No messages yet. Start the conversation!",
+                    icon: Icons.chat_bubble_outline,
+                  );
+                }
+
                 final docs = snapshot.data!.docs;
                 return ListView.builder(
                   reverse: true,

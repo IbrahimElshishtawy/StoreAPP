@@ -55,13 +55,19 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     });
 
     on<ApplyDiscountCode>((event, emit) {
-      // Mock discount logic
       double discount = 0.0;
-      if (event.code == 'SAVE10') {
+      final code = event.code.toUpperCase();
+
+      if (code == 'SAVE10') {
         discount = state.totalAmount * 0.1;
+      } else if (code == 'WELCOME20') {
+        discount = state.totalAmount * 0.2;
+      } else if (code == 'MEGA50') {
+        discount = state.totalAmount * 0.5;
       }
+
       emit(state.copyWith(
-        discountCode: event.code,
+        discountCode: code,
         discountAmount: discount,
         status: CartStatus.initial,
       ));
