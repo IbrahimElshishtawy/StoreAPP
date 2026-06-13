@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
@@ -59,22 +60,9 @@ class CartPage extends StatelessWidget {
               backgroundColor: const Color.fromARGB(255, 230, 230, 230),
             ),
             body: cartItems.isEmpty && state.status != CartStatus.loading
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shopping_cart_outlined,
-                          size: 60,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Your cart is empty',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                ? const EmptyState(
+                    message: 'Your cart is empty',
+                    icon: Icons.shopping_cart_outlined,
                   )
                 : SafeArea(
                     child: Column(

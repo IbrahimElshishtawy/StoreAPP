@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:store/features/reviews/domain/entities/review.dart';
 
 abstract class ReviewRemoteDataSource {
@@ -6,31 +7,44 @@ abstract class ReviewRemoteDataSource {
 }
 
 class ReviewRemoteDataSourceImpl implements ReviewRemoteDataSource {
+  final FirebaseFirestore firestore;
+
+  ReviewRemoteDataSourceImpl({FirebaseFirestore? firestore})
+      : firestore = firestore ?? FirebaseFirestore.instance;
+
   @override
   Future<List<Review>> getProductReviews(String productId) async {
-    // Mock reviews
-    return [
-      Review(
-        id: '1',
+    final snapshot = await firestore
+        .collection('products')
+        .doc(productId)
+        .collection('reviews')
+        .orderBy('date', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Review(
+        id: doc.id,
         productId: productId,
-        userName: 'John Doe',
-        comment: 'Great product!',
-        rating: 5.0,
-        date: DateTime.now(),
-      ),
-      Review(
-        id: '2',
-        productId: productId,
-        userName: 'Jane Smith',
-        comment: 'Satisfied with the quality.',
-        rating: 4.0,
-        date: DateTime.now(),
-      ),
-    ];
+        userName: data['userName'],
+        comment: data['comment'],
+        rating: (data['rating'] as num).toDouble(),
+        date: (data['date'] as Timestamp).toDate(),
+      );
+    }).toList();
   }
 
   @override
   Future<void> addReview(Review review) async {
-    // Implement Firestore logic
+    await firestore
+        .collection('products')
+        .doc(review.productId)
+        .collection('reviews')
+        .add({
+      'userName': review.userName,
+      'comment': review.comment,
+      'rating': review.rating,
+      'date': FieldValue.serverTimestamp(),
+    });
   }
 }
