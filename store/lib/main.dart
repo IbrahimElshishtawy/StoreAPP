@@ -12,7 +12,9 @@ import 'package:store/features/auth/presentation/pages/login_page.dart';
 import 'package:store/features/seller/presentation/pages/my_products_page.dart';
 import 'package:store/features/auth/presentation/pages/profile_page.dart';
 import 'package:store/features/auth/presentation/pages/register_page.dart';
+import 'package:store/features/chat/presentation/pages/chat_page.dart';
 import 'package:store/presentation/pages/splash_screen.dart';
+import 'package:store/features/seller/presentation/pages/seller_dashboard.dart';
 import 'package:store/features/seller/presentation/pages/upload_product_page.dart';
 import 'package:store/presentation/pages/store_view.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,6 +24,7 @@ import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/reviews/presentation/bloc/review_bloc.dart';
+import 'package:store/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
@@ -48,6 +51,7 @@ class Store extends StatelessWidget {
         BlocProvider<ProductBloc>(create: (_) => di.sl<ProductBloc>()),
         BlocProvider<SellerBloc>(create: (_) => di.sl<SellerBloc>()),
         BlocProvider<ReviewBloc>(create: (_) => di.sl<ReviewBloc>()),
+        BlocProvider<ChatBloc>(create: (_) => di.sl<ChatBloc>()),
         BlocProvider<ThemeCubit>(create: (_) => di.sl<ThemeCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
@@ -85,6 +89,8 @@ class Store extends StatelessWidget {
               '/upload': (context) => const UploadProductPage(),
               '/cart': (context) => const CartPage(),
               '/orders': (context) => const MyProductsPage(),
+              '/seller_dashboard': (context) => const SellerDashboard(),
+              '/chat': (context) => const ChatPage(),
             },
             onGenerateRoute: (settings) {
               if (settings.name == '/editProfile') {
