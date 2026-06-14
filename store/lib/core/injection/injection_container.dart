@@ -32,6 +32,7 @@ import 'package:store/features/reviews/data/repositories/review_repository_impl.
 import 'package:store/features/reviews/domain/repositories/review_repository.dart';
 import 'package:store/features/reviews/domain/usecases/review_usecases.dart';
 import 'package:store/features/reviews/presentation/bloc/review_bloc.dart';
+import 'package:store/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:store/core/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -107,6 +108,7 @@ Future<void> init() async {
         getProductReviewsUseCase: sl(),
         addReviewUseCase: sl(),
       ));
+  sl.registerFactory(() => ChatBloc(firestore: sl(), auth: sl()));
   sl.registerLazySingleton(() => GetProductReviewsUseCase(sl()));
   sl.registerLazySingleton(() => AddReviewUseCase(sl()));
   sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(sl()));
