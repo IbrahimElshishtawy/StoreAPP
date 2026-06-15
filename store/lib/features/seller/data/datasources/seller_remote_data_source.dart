@@ -13,12 +13,12 @@ abstract class SellerRemoteDataSource {
 class SellerRemoteDataSourceImpl implements SellerRemoteDataSource {
   @override
   Future<SellerStats> getSellerStats() async {
-    // Mock data with enriched statistics
+    // Mock data with enriched statistics for realistic reports
     return SellerStats(
-      totalSales: 15000.0,
-      totalProfit: 4500.0,
-      totalOrders: 124,
-      dailySales: [120, 250, 180, 350, 280, 450, 400],
+      totalSales: 24580.50,
+      totalProfit: 8240.25,
+      totalOrders: 186,
+      dailySales: [450, 320, 580, 420, 750, 680, 950],
       bestSellingProducts: [
         ProductEntity(
           id: '1',
@@ -38,8 +38,17 @@ class SellerRemoteDataSourceImpl implements SellerRemoteDataSource {
           image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa',
           rating: 4.7,
         ),
+        ProductEntity(
+          id: '3',
+          title: 'Wireless Earbuds',
+          price: 129.50,
+          description: 'Noise cancelling',
+          category: 'Electronics',
+          image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
+          rating: 4.5,
+        ),
       ],
-      behavior: CustomerBehavior(visits: 2500, conversions: 124),
+      behavior: CustomerBehavior(visits: 4200, conversions: 186),
     );
   }
 
