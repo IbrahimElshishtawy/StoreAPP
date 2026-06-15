@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class ProductVideoPlayer extends StatefulWidget {
   final String videoUrl;
@@ -52,6 +53,9 @@ class _ProductVideoPlayerState extends State<ProductVideoPlayer> {
               ],
             ),
           )
-        : const Center(child: CircularProgressIndicator());
+        : const SizedBox(
+            height: 200,
+            child: LoadingIndicator(),
+          );
   }
 }

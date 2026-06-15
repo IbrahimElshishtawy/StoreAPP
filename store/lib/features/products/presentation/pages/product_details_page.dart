@@ -11,6 +11,7 @@ import 'package:store/presentation/models/dummy_product.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/domain/entities/cart_item.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final ProductEntity product;
@@ -188,10 +189,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     return BlocBuilder<ReviewBloc, ReviewState>(
       builder: (context, state) {
         if (state is ReviewLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator();
         } else if (state is ReviewsLoaded) {
           if (state.reviews.isEmpty) {
-            return const Text('No reviews yet.');
+            return const EmptyState(message: 'No reviews yet.', icon: Icons.rate_review_outlined);
           }
           return ListView.builder(
             shrinkWrap: true,
@@ -213,7 +214,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             },
           );
         } else if (state is ReviewError) {
-          return Text('Error: ${state.message}');
+          return ErrorState(
+            message: state.message,
+            onRetry: () => context.read<ReviewBloc>().add(GetProductReviewsRequested(widget.product.id)),
+          );
         }
         return const SizedBox();
       },
