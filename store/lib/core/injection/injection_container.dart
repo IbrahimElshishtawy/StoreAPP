@@ -32,6 +32,13 @@ import 'package:store/features/reviews/data/repositories/review_repository_impl.
 import 'package:store/features/reviews/domain/repositories/review_repository.dart';
 import 'package:store/features/reviews/domain/usecases/review_usecases.dart';
 import 'package:store/features/reviews/presentation/bloc/review_bloc.dart';
+import 'package:store/features/chat/data/datasources/chat_remote_data_source.dart';
+import 'package:store/features/chat/data/repositories/chat_repository_impl.dart';
+import 'package:store/features/chat/domain/repositories/chat_repository.dart';
+import 'package:store/features/chat/domain/usecases/send_message_usecase.dart';
+import 'package:store/features/chat/domain/usecases/stream_messages_usecase.dart';
+import 'package:store/features/chat/domain/usecases/get_chat_id_usecase.dart';
+import 'package:store/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:store/core/theme/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -111,4 +118,16 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddReviewUseCase(sl()));
   sl.registerLazySingleton<ReviewRepository>(() => ReviewRepositoryImpl(sl()));
   sl.registerLazySingleton<ReviewRemoteDataSource>(() => ReviewRemoteDataSourceImpl());
+
+  // Features - Chat
+  sl.registerFactory(() => ChatBloc(
+        sendMessageUseCase: sl(),
+        streamMessagesUseCase: sl(),
+        getChatIdUseCase: sl(),
+      ));
+  sl.registerLazySingleton(() => SendMessageUseCase(sl()));
+  sl.registerLazySingleton(() => StreamMessagesUseCase(sl()));
+  sl.registerLazySingleton(() => GetChatIdUseCase(sl()));
+  sl.registerLazySingleton<ChatRepository>(() => ChatRepositoryImpl(sl()));
+  sl.registerLazySingleton<ChatRemoteDataSource>(() => ChatRemoteDataSourceImpl(sl()));
 }
