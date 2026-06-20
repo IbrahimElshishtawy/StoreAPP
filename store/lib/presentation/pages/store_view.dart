@@ -22,6 +22,10 @@ class _StoreViewState extends State<StoreView> {
   @override
   void initState() {
     super.initState();
+    _loadProducts();
+  }
+
+  void _loadProducts() {
     context.read<ProductBloc>().add(GetProductsRequested());
   }
 
@@ -36,7 +40,7 @@ class _StoreViewState extends State<StoreView> {
           if (state is ProductLoading) {
             return const LoadingIndicator();
           } else if (state is ProductError) {
-            return Center(child: Text(state.message));
+            return ErrorState(message: state.message, onRetry: _loadProducts);
           } else if (state is ProductEmpty) {
             return const EmptyState(message: 'No products found');
           } else if (state is ProductLoaded) {

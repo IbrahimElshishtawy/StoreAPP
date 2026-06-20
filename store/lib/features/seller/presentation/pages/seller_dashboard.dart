@@ -7,6 +7,7 @@ import 'package:store/features/seller/domain/entities/seller_stats.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -19,6 +20,10 @@ class _SellerDashboardState extends State<SellerDashboard> {
   @override
   void initState() {
     super.initState();
+    _loadStats();
+  }
+
+  void _loadStats() {
     context.read<SellerBloc>().add(GetSellerStatsRequested());
   }
 
@@ -29,7 +34,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
       body: BlocBuilder<SellerBloc, SellerState>(
         builder: (context, state) {
           if (state is SellerLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           } else if (state is SellerStatsLoaded) {
             final stats = state.stats;
             return SingleChildScrollView(
@@ -63,9 +68,9 @@ class _SellerDashboardState extends State<SellerDashboard> {
               ),
             );
           } else if (state is SellerError) {
-            return Center(child: Text(state.message));
+            return ErrorState(message: state.message, onRetry: _loadStats);
           }
-          return const Center(child: Text("No stats available"));
+          return const EmptyState(message: "No stats available");
         },
       ),
     );
@@ -80,8 +85,8 @@ class _SellerDashboardState extends State<SellerDashboard> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.5,
       children: [
-        _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
-        _buildStatCard("Total Profit", "\$${stats.totalProfit}", Colors.teal),
+        _buildStatCard("Total Sales", "\$${stats.totalSales.toStringAsFixed(2)}", Colors.green),
+        _buildStatCard("Total Profit", "\$${stats.totalProfit.toStringAsFixed(2)}", Colors.teal),
         _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
         _buildStatCard("Visits", "${stats.behavior.visits}", Colors.orange),
       ],
@@ -89,6 +94,9 @@ class _SellerDashboardState extends State<SellerDashboard> {
   }
 
   Widget _buildBestSellingProducts(SellerStats stats) {
+    if (stats.bestSellingProducts.isEmpty) {
+      return const Text("No sales data yet.");
+    }
     return Column(
       children: stats.bestSellingProducts.map((product) {
         return Card(
@@ -118,7 +126,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
           _buildBehaviorItem("Conversions", "${behavior.conversions}"),
           _buildBehaviorItem(
             "Conv. Rate",
-            "${((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1)}%",
+            "${behavior.visits > 0 ? ((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1) : 0}%",
           ),
         ],
       ),
@@ -162,6 +170,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
   }
 
   Widget _buildSalesChart(List<double> dailySales) {
+    if (dailySales.isEmpty) return const SizedBox(height: 100, child: Center(child: Text("No sales history")));
     return SizedBox(
       height: 200,
       child: LineChart(
