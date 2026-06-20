@@ -1,79 +1,80 @@
-// ignore_for_file: file_names
+import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class ProductModel {
   final String id;
-  final String? title;
-  final String? description;
-  final double? price;
-  final String? imageUrl;
-  final RatingModel? rating;
+  final String title;
+  final String description;
+  final double price;
+  final String image;
+  final String category;
+  final double rating;
+  final int ratingCount;
+  final bool isPromoted;
 
   ProductModel({
     required this.id,
-    this.title,
-    this.description,
-    this.price,
-    this.imageUrl,
-    this.rating,
+    required this.title,
+    required this.description,
+    required this.price,
+    required this.image,
+    required this.category,
+    required this.rating,
+    required this.ratingCount,
+    required this.isPromoted,
   });
 
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
+  factory ProductModel.fromJson(Map<String, dynamic> json, [String? docId]) {
     return ProductModel(
-      id: json['id'].toString(),
-      title: json['title'] as String?,
-      description: json['description'] as String?,
-      price: (json['price'] as num?)?.toDouble(),
-      imageUrl: json['image'] as String?,
-      rating: json['rating'] != null
-          ? RatingModel.fromJson(json['rating'])
-          : null,
+      id: docId ?? json['id']?.toString() ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      image: json['image'] ?? '',
+      category: json['category'] ?? '',
+      rating: (json['rating']?['rate'] as num?)?.toDouble() ??
+              (json['rating'] is num ? (json['rating'] as num).toDouble() : 0.0),
+      ratingCount: json['rating']?['count'] ?? 0,
+      isPromoted: json['isPromoted'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'title': title,
       'description': description,
       'price': price,
-      'image': imageUrl,
-      'rating': rating?.toJson(),
+      'image': image,
+      'category': category,
+      'rating': {'rate': rating, 'count': ratingCount},
+      'isPromoted': isPromoted,
     };
   }
 
-  ProductModel copyWith({
-    String? id,
-    String? title,
-    String? description,
-    double? price,
-    String? imageUrl,
-    RatingModel? rating,
-  }) {
+  ProductEntity toEntity() {
+    return ProductEntity(
+      id: id,
+      title: title,
+      description: description,
+      price: price,
+      image: image,
+      category: category,
+      rating: rating,
+      ratingCount: ratingCount,
+      isPromoted: isPromoted,
+    );
+  }
+
+  factory ProductModel.fromEntity(ProductEntity entity) {
     return ProductModel(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      price: price ?? this.price,
-      imageUrl: imageUrl ?? this.imageUrl,
-      rating: rating ?? this.rating,
+      id: entity.id,
+      title: entity.title,
+      description: entity.description,
+      price: entity.price,
+      image: entity.image,
+      category: entity.category,
+      rating: entity.rating,
+      ratingCount: entity.ratingCount,
+      isPromoted: entity.isPromoted,
     );
-  }
-}
-
-class RatingModel {
-  final double rate;
-  final int count;
-
-  RatingModel({required this.rate, required this.count});
-
-  factory RatingModel.fromJson(Map<String, dynamic> json) {
-    return RatingModel(
-      rate: (json['rate'] as num?)?.toDouble() ?? 0.0,
-      count: json['count'] as int? ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'rate': rate, 'count': count};
   }
 }
