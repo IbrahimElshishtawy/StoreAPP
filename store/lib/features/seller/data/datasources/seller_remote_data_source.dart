@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:store/features/seller/domain/entities/seller_stats.dart';
 import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/features/products/data/models/product_model.dart';
 
 abstract class SellerRemoteDataSource {
   Future<SellerStats> getSellerStats();
@@ -11,55 +14,89 @@ abstract class SellerRemoteDataSource {
 }
 
 class SellerRemoteDataSourceImpl implements SellerRemoteDataSource {
+  final FirebaseFirestore firestore;
+  final FirebaseStorage storage;
+
+  SellerRemoteDataSourceImpl({
+    required this.firestore,
+    required this.storage,
+  });
+
   @override
   Future<SellerStats> getSellerStats() async {
-    // Mock data with enriched statistics
+    final ordersSnapshot = await firestore.collection('orders').get();
+    final productsSnapshot = await firestore.collection('products').limit(5).get();
+
+    double totalSales = 0;
+    for (var doc in ordersSnapshot.docs) {
+      totalSales += (doc.data()['totalAmount'] ?? 0).toDouble();
+    }
+
+    List<ProductEntity> bestSellers = productsSnapshot.docs.map((doc) {
+      return ProductModel.fromJson(doc.data(), doc.id);
+    }).toList();
+
     return SellerStats(
-      totalSales: 15000.0,
-      totalProfit: 4500.0,
-      totalOrders: 124,
+      totalSales: totalSales,
+      totalProfit: totalSales * 0.3,
+      totalOrders: ordersSnapshot.docs.length,
       dailySales: [120, 250, 180, 350, 280, 450, 400],
-      bestSellingProducts: [
-        ProductEntity(
-          id: '1',
-          title: 'Premium Watch',
-          price: 199.99,
-          description: 'Luxury watch',
-          category: 'Electronics',
-          image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
-          rating: 4.8,
-        ),
-        ProductEntity(
-          id: '2',
-          title: 'Designer Bag',
-          price: 299.99,
-          description: 'Italian leather',
-          category: "Women's Clothing",
-          image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa',
-          rating: 4.7,
-        ),
-      ],
-      behavior: CustomerBehavior(visits: 2500, conversions: 124),
+      bestSellingProducts: bestSellers,
+      behavior: CustomerBehavior(visits: 2500, conversions: ordersSnapshot.docs.length),
     );
   }
 
   @override
   Future<void> addProduct(ProductEntity product, File? imageFile) async {
-    // Implement Firestore logic
+    String imageUrl = product.image;
+    if (imageFile != null) {
+      final ref = storage.ref().child('products/${DateTime.now().toIso8601String()}');
+      await ref.putFile(imageFile);
+      imageUrl = await ref.getDownloadURL();
+    }
+
+    final productModel = ProductModel(
+      id: '',
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      image: imageUrl,
+      category: product.category,
+      rating: product.rating,
+      isPromoted: product.isPromoted,
+    );
+
+    await firestore.collection('products').add(productModel.toJson());
   }
 
   @override
   Future<void> updateProduct(ProductEntity product, File? imageFile) async {
-    // Implement Firestore logic
+    String imageUrl = product.image;
+    if (imageFile != null) {
+      final ref = storage.ref().child('products/${product.id}');
+      await ref.putFile(imageFile);
+      imageUrl = await ref.getDownloadURL();
+    }
+
+    final data = {
+      'title': product.title,
+      'description': product.description,
+      'price': product.price,
+      'image': imageUrl,
+      'category': product.category,
+      'isPromoted': product.isPromoted,
+    };
+
+    await firestore.collection('products').doc(product.id).update(data);
   }
 
   @override
   Future<void> deleteProduct(String productId) async {
-    // Implement Firestore logic
+    await firestore.collection('products').doc(productId).delete();
   }
 
   @override
   Future<void> promoteProduct(String productId) async {
-    // Implement promotion logic
+    await firestore.collection('products').doc(productId).update({'isPromoted': true});
   }
 }
