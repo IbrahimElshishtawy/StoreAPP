@@ -94,6 +94,22 @@ class _HomePageState extends State<HomePage> {
                             },
                           ),
                           ListTile(
+                            leading: const Icon(Icons.dashboard_outlined, color: Colors.purple),
+                            title: const Text('Seller Dashboard'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.pushNamed(context, '/seller_dashboard');
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.chat_outlined, color: Colors.blueAccent),
+                            title: const Text('Support Chat'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.pushNamed(context, '/chat');
+                            },
+                          ),
+                          ListTile(
                             leading: const Icon(Icons.history, color: Colors.indigo),
                             title: const Text('Order History'),
                             onTap: () {
