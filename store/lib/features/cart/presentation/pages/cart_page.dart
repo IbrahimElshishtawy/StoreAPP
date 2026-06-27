@@ -1,282 +1,190 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
 
   @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  late final TextEditingController _codeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _codeController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocListener<CartBloc, CartState>(
-      listener: (context, state) {
-        if (state.status == CartStatus.success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("✅ Order placed successfully!")),
-          );
-          showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: const Text("✅ Order Placed"),
-              content: const Text("Your order has been placed successfully!"),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text("OK"),
-                ),
-              ],
-            ),
-          );
-        } else if (state.status == CartStatus.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Failed to place order: ${state.errorMessage}")),
-          );
-        }
-      },
-      child: BlocBuilder<CartBloc, CartState>(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Shopping Cart'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => context.read<CartBloc>().add(ClearCart()),
+          ),
+        ],
+      ),
+      body: BlocConsumer<CartBloc, CartState>(
+        listener: (context, state) {
+          if (state.status == CartStatus.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Order placed successfully!'), backgroundColor: Colors.green),
+            );
+          } else if (state.status == CartStatus.error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? 'An error occurred'), backgroundColor: Colors.red),
+            );
+          }
+          if (state.discountCode != null && state.discountCode != _codeController.text) {
+            _codeController.text = state.discountCode!;
+          }
+        },
         builder: (context, state) {
-          final cartItems = state.items;
-          final isLoading = state.status == CartStatus.loading;
+          if (state.status == CartStatus.loading) {
+            return const LoadingIndicator();
+          }
 
-          return Scaffold(
-            appBar: AppBar(
-              title: Row(
-                children: [
-                  const Text("Your Cart"),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    backgroundColor: Colors.white,
-                    radius: 12,
-                    child: Text(
-                      cartItems.length.toString(),
-                      style: const TextStyle(fontSize: 12, color: Colors.teal),
-                    ),
-                  ),
-                ],
+          if (state.items.isEmpty) {
+            return const EmptyState(
+              message: 'Your cart is empty',
+              icon: Icons.shopping_cart_outlined,
+            );
+          }
+
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: state.items.length,
+                  itemBuilder: (context, index) {
+                    final item = state.items[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: ListTile(
+                        leading: Image.network(item.product.image, width: 50, height: 50, fit: BoxFit.cover),
+                        title: Text(item.product.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text('\$${item.product.price} x ${item.quantity}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline),
+                              onPressed: () {
+                                if (item.quantity > 1) {
+                                  context.read<CartBloc>().add(UpdateQuantity(item.product.id, item.quantity - 1));
+                                } else {
+                                  context.read<CartBloc>().add(RemoveFromCart(item.product.id));
+                                }
+                              },
+                            ),
+                            Text('${item.quantity}'),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline),
+                              onPressed: () => context.read<CartBloc>().add(UpdateQuantity(item.product.id, item.quantity + 1)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-              backgroundColor: const Color.fromARGB(255, 230, 230, 230),
-            ),
-            body: cartItems.isEmpty && state.status != CartStatus.loading
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shopping_cart_outlined,
-                          size: 60,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Your cart is empty',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                : SafeArea(
-                    child: Column(
-                      children: [
-                        if (isLoading) const LinearProgressIndicator(),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: cartItems.length,
-                            itemBuilder: (context, index) {
-                              final item = cartItems[index];
-                              final product = item.product;
-
-                              return Card(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: ListTile(
-                                  leading: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: CachedNetworkImage(
-                                      imageUrl: product.image,
-                                      width: 60,
-                                      height: 60,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                      errorWidget: (context, url, error) => const Icon(
-                                        Icons.broken_image,
-                                        size: 40,
-                                      ),
-                                    ),
-                                  ),
-                                  title: Text(product.title),
-                                  subtitle: Text('\$${product.price}'),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.remove_circle_outline,
-                                        ),
-                                        onPressed: () {
-                                          if (item.quantity == 1) {
-                                            showDialog(
-                                              context: context,
-                                              builder: (ctx) => AlertDialog(
-                                                title: const Text(
-                                                  "Remove Product",
-                                                ),
-                                                content: const Text(
-                                                  "Remove this product from the cart?",
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.of(ctx).pop(),
-                                                    child: const Text("Cancel"),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      context
-                                                          .read<CartBloc>()
-                                                          .add(
-                                                            RemoveFromCart(
-                                                              product.id,
-                                                            ),
-                                                          );
-                                                      Navigator.of(ctx).pop();
-                                                    },
-                                                    child: const Text("Remove"),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          } else {
-                                            context.read<CartBloc>().add(
-                                              UpdateQuantity(
-                                                product.id,
-                                                item.quantity - 1,
-                                              ),
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      Text(
-                                        item.quantity.toString(),
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.add_circle_outline,
-                                        ),
-                                        onPressed: () =>
-                                            context.read<CartBloc>().add(
-                                              UpdateQuantity(
-                                                product.id,
-                                                item.quantity + 1,
-                                              ),
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Total:',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    '\$${state.totalAmount.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color.fromARGB(255, 56, 124, 110),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: isLoading ? null : () => context.read<CartBloc>().add(PlaceOrderRequested('stripe')),
-                                      icon: const Icon(Icons.credit_card),
-                                      label: const Text("Stripe"),
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: isLoading ? null : () => context.read<CartBloc>().add(PlaceOrderRequested('paypal')),
-                                      icon: const Icon(Icons.payment),
-                                      label: const Text("PayPal"),
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              ElevatedButton.icon(
-                                onPressed: isLoading
-                                    ? null
-                                    : () => context.read<CartBloc>().add(PlaceOrderRequested('stripe')),
-                                icon: isLoading
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.check_circle_outline),
-                                label: Text(
-                                  isLoading ? "Placing Order..." : "Place Order",
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.teal,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  textStyle: const TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              _buildSummary(context, state),
+            ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildSummary(BuildContext context, CartState state) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _codeController,
+                  decoration: const InputDecoration(hintText: 'Discount Code', border: OutlineInputBorder()),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => context.read<CartBloc>().add(ApplyDiscountCode(_codeController.text.trim())),
+                child: const Text('Apply'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Subtotal', style: TextStyle(fontSize: 16)),
+              Text('\$${state.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+          if (state.discountAmount > 0)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Discount', style: TextStyle(fontSize: 16, color: Colors.green)),
+                Text('-\$${state.discountAmount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 16, color: Colors.green)),
+              ],
+            ),
+          const Divider(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Total', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('\$${state.finalAmount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal)),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16)),
+                  onPressed: () => context.read<CartBloc>().add(PlaceOrderRequested('Stripe')),
+                  child: const Text('Pay with Stripe'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 16)),
+                  onPressed: () => context.read<CartBloc>().add(PlaceOrderRequested('PayPal')),
+                  child: const Text('Pay with PayPal'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -213,7 +213,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
             },
           );
         } else if (state is ReviewError) {
-          return Text('Error: ${state.message}');
+          return ErrorState(message: state.message, onRetry: () => context.read<ReviewBloc>().add(GetProductReviewsRequested(widget.product.id)));
         }
         return const SizedBox();
       },

@@ -7,6 +7,7 @@ import 'package:store/features/seller/domain/entities/seller_stats.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -19,19 +20,31 @@ class _SellerDashboardState extends State<SellerDashboard> {
   @override
   void initState() {
     super.initState();
+    _loadStats();
+  }
+
+  void _loadStats() {
     context.read<SellerBloc>().add(GetSellerStatsRequested());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Seller Dashboard")),
+      appBar: AppBar(
+        title: const Text("Seller Dashboard"),
+        actions: [
+          IconButton(onPressed: _loadStats, icon: const Icon(Icons.refresh)),
+        ],
+      ),
       body: BlocBuilder<SellerBloc, SellerState>(
         builder: (context, state) {
           if (state is SellerLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           } else if (state is SellerStatsLoaded) {
             final stats = state.stats;
+            if (stats.totalOrders == 0) {
+              return const EmptyState(message: "No sales data available yet.", icon: Icons.analytics_outlined);
+            }
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -63,7 +76,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               ),
             );
           } else if (state is SellerError) {
-            return Center(child: Text(state.message));
+            return ErrorState(message: state.message, onRetry: _loadStats);
           }
           return const Center(child: Text("No stats available"));
         },
@@ -80,8 +93,8 @@ class _SellerDashboardState extends State<SellerDashboard> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.5,
       children: [
-        _buildStatCard("Total Sales", "\$${stats.totalSales}", Colors.green),
-        _buildStatCard("Total Profit", "\$${stats.totalProfit}", Colors.teal),
+        _buildStatCard("Total Sales", "\$${stats.totalSales.toStringAsFixed(2)}", Colors.green),
+        _buildStatCard("Total Profit", "\$${stats.totalProfit.toStringAsFixed(2)}", Colors.teal),
         _buildStatCard("Orders", "${stats.totalOrders}", Colors.blue),
         _buildStatCard("Visits", "${stats.behavior.visits}", Colors.orange),
       ],
@@ -93,9 +106,17 @@ class _SellerDashboardState extends State<SellerDashboard> {
       children: stats.bestSellingProducts.map((product) {
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
           child: ListTile(
-            leading: CircleAvatar(backgroundImage: NetworkImage(product.image)),
-            title: Text(product.title),
+            leading: CircleAvatar(
+              backgroundImage: product.image.isNotEmpty ? NetworkImage(product.image) : null,
+              child: product.image.isEmpty ? const Icon(Icons.image) : null,
+            ),
+            title: Text(product.title, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text('\$${product.price}'),
             trailing: const Icon(Icons.trending_up, color: Colors.green),
           ),
@@ -108,9 +129,9 @@ class _SellerDashboardState extends State<SellerDashboard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.purple.withOpacity(0.1),
+        color: Colors.purple.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.purple),
+        border: Border.all(color: Colors.purple.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -118,7 +139,9 @@ class _SellerDashboardState extends State<SellerDashboard> {
           _buildBehaviorItem("Conversions", "${behavior.conversions}"),
           _buildBehaviorItem(
             "Conv. Rate",
-            "${((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1)}%",
+            behavior.visits > 0
+              ? "${((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1)}%"
+              : "0%",
           ),
         ],
       ),
@@ -141,7 +164,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -162,13 +185,14 @@ class _SellerDashboardState extends State<SellerDashboard> {
   }
 
   Widget _buildSalesChart(List<double> dailySales) {
+    if (dailySales.isEmpty) return const SizedBox(height: 200, child: Center(child: Text("No chart data")));
     return SizedBox(
       height: 200,
       child: LineChart(
         LineChartData(
           gridData: const FlGridData(show: false),
           titlesData: const FlTitlesData(show: false),
-          borderData: FlBorderData(show: true),
+          borderData: FlBorderData(show: true, border: Border.all(color: Colors.grey.shade300)),
           lineBarsData: [
             LineChartBarData(
               spots: dailySales
@@ -180,6 +204,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               color: Colors.blue,
               barWidth: 4,
               dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.1)),
             ),
           ],
         ),
