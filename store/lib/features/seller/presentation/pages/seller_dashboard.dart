@@ -7,6 +7,7 @@ import 'package:store/features/seller/domain/entities/seller_stats.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -19,6 +20,10 @@ class _SellerDashboardState extends State<SellerDashboard> {
   @override
   void initState() {
     super.initState();
+    _loadStats();
+  }
+
+  void _loadStats() {
     context.read<SellerBloc>().add(GetSellerStatsRequested());
   }
 
@@ -29,7 +34,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
       body: BlocBuilder<SellerBloc, SellerState>(
         builder: (context, state) {
           if (state is SellerLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           } else if (state is SellerStatsLoaded) {
             final stats = state.stats;
             return SingleChildScrollView(
@@ -63,9 +68,9 @@ class _SellerDashboardState extends State<SellerDashboard> {
               ),
             );
           } else if (state is SellerError) {
-            return Center(child: Text(state.message));
+            return ErrorState(message: state.message, onRetry: _loadStats);
           }
-          return const Center(child: Text("No stats available"));
+          return const EmptyState(message: "No stats available");
         },
       ),
     );
@@ -118,7 +123,9 @@ class _SellerDashboardState extends State<SellerDashboard> {
           _buildBehaviorItem("Conversions", "${behavior.conversions}"),
           _buildBehaviorItem(
             "Conv. Rate",
-            "${((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1)}%",
+            behavior.visits > 0
+              ? "${((behavior.conversions / behavior.visits) * 100).toStringAsFixed(1)}%"
+              : "0.0%",
           ),
         ],
       ),
@@ -162,28 +169,30 @@ class _SellerDashboardState extends State<SellerDashboard> {
   }
 
   Widget _buildSalesChart(List<double> dailySales) {
-    return SizedBox(
-      height: 200,
-      child: LineChart(
-        LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: const FlTitlesData(show: false),
-          borderData: FlBorderData(show: true),
-          lineBarsData: [
-            LineChartBarData(
-              spots: dailySales
-                  .asMap()
-                  .entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value))
-                  .toList(),
-              isCurved: true,
-              color: Colors.blue,
-              barWidth: 4,
-              dotData: const FlDotData(show: false),
+    return dailySales.isEmpty
+      ? const Center(child: Text("No sales data for the chart"))
+      : SizedBox(
+          height: 200,
+          child: LineChart(
+            LineChartData(
+              gridData: const FlGridData(show: false),
+              titlesData: const FlTitlesData(show: false),
+              borderData: FlBorderData(show: true),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: dailySales
+                      .asMap()
+                      .entries
+                      .map((e) => FlSpot(e.key.toDouble(), e.value))
+                      .toList(),
+                  isCurved: true,
+                  color: Colors.blue,
+                  barWidth: 4,
+                  dotData: const FlDotData(show: false),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        );
   }
 }

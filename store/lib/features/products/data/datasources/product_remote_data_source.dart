@@ -1,9 +1,9 @@
 import 'package:store/core/network/dio_client.dart';
-import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:store/features/products/data/models/product_model.dart';
 
 abstract class ProductRemoteDataSource {
-  Future<List<ProductEntity>> getProducts();
-  Future<List<ProductEntity>> getProductsByCategory(String category);
+  Future<List<ProductModel>> getProducts();
+  Future<List<ProductModel>> getProductsByCategory(String category);
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
@@ -12,12 +12,12 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   ProductRemoteDataSourceImpl(this.dioClient);
 
   @override
-  Future<List<ProductEntity>> getProducts() async {
+  Future<List<ProductModel>> getProducts() async {
     try {
       final response = await dioClient.dio.get('/products');
       if (response.statusCode == 200) {
         final List data = response.data;
-        return data.map((json) => _mapJsonToEntity(json)).toList();
+        return data.map((json) => _mapJsonToModel(json)).toList();
       }
       return [];
     } catch (e) {
@@ -26,12 +26,12 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   }
 
   @override
-  Future<List<ProductEntity>> getProductsByCategory(String category) async {
+  Future<List<ProductModel>> getProductsByCategory(String category) async {
     try {
       final response = await dioClient.dio.get('/products/category/$category');
       if (response.statusCode == 200) {
         final List data = response.data;
-        return data.map((json) => _mapJsonToEntity(json)).toList();
+        return data.map((json) => _mapJsonToModel(json)).toList();
       }
       return [];
     } catch (e) {
@@ -39,17 +39,23 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     }
   }
 
-  ProductEntity _mapJsonToEntity(Map<String, dynamic> json) {
-    return ProductEntity(
-      id: json['id'].toString(),
+  ProductModel _mapJsonToModel(Map<String, dynamic> json) {
+    final int? id = json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '');
+    final double price = (json['price'] as num?)?.toDouble() ?? 0.0;
+
+    return ProductModel(
+      id: json['id']?.toString() ?? '',
       title: json['title'],
       category: json['category'],
-      price: (json['price'] as num).toDouble(),
-      image: json['image'],
+      price: price,
+      imageUrl: json['image'],
       description: json['description'],
-      rating: (json['rating']?['rate'] as num?)?.toDouble() ?? 0.0,
-      ratingCount: json['rating']?['count'] ?? 0,
-      isPromoted: (json['id'] as int) % 5 == 0,
+      rating: json['rating'] != null ? RatingModel.fromJson(json['rating']) : null,
+      isPromoted: id != null ? id % 5 == 0 : false,
+      hasVr: id != null ? id % 3 == 0 : false,
+      dealTag: id != null && id % 7 == 0 ? 'Special Offer' : null,
+      originalPrice: price > 0 ? price * 1.2 : null,
+      arModelUrl: 'assets/models/product.glb',
     );
   }
 }
