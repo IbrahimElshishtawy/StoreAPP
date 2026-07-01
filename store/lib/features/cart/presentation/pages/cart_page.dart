@@ -4,9 +4,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/presentation/bloc/cart_state.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  final TextEditingController _discountController = TextEditingController();
+
+  @override
+  void dispose() {
+    _discountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,22 +73,9 @@ class CartPage extends StatelessWidget {
               backgroundColor: const Color.fromARGB(255, 230, 230, 230),
             ),
             body: cartItems.isEmpty && state.status != CartStatus.loading
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shopping_cart_outlined,
-                          size: 60,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          'Your cart is empty',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                ? const EmptyState(
+                    message: 'Your cart is empty',
+                    icon: Icons.shopping_cart_outlined,
                   )
                 : SafeArea(
                     child: Column(
@@ -217,6 +218,37 @@ class CartPage extends StatelessWidget {
                                   ),
                                 ],
                               ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: _discountController,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Enter discount code',
+                                        isDense: true,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      context.read<CartBloc>().add(ApplyDiscountCode(_discountController.text.trim()));
+                                    },
+                                    child: const Text('Apply'),
+                                  ),
+                                ],
+                              ),
+                              if (state.discountAmount > 0)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Discount (${state.discountCode}):', style: const TextStyle(color: Colors.red)),
+                                      Text('-\$${state.discountAmount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
                               const SizedBox(height: 12),
                               Row(
                                 children: [

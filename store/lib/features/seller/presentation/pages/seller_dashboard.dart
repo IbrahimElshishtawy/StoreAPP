@@ -7,6 +7,7 @@ import 'package:store/features/seller/domain/entities/seller_stats.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
+import 'package:store/presentation/widgets/common_ui.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -26,10 +27,17 @@ class _SellerDashboardState extends State<SellerDashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Seller Dashboard")),
-      body: BlocBuilder<SellerBloc, SellerState>(
+      body: BlocConsumer<SellerBloc, SellerState>(
+        listener: (context, state) {
+          if (state is SellerError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is SellerLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           } else if (state is SellerStatsLoaded) {
             final stats = state.stats;
             return SingleChildScrollView(
@@ -63,9 +71,12 @@ class _SellerDashboardState extends State<SellerDashboard> {
               ),
             );
           } else if (state is SellerError) {
-            return Center(child: Text(state.message));
+            return ErrorState(
+              message: state.message,
+              onRetry: () => context.read<SellerBloc>().add(GetSellerStatsRequested()),
+            );
           }
-          return const Center(child: Text("No stats available"));
+          return const EmptyState(message: "No stats available");
         },
       ),
     );

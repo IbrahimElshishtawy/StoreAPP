@@ -21,18 +21,26 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         updatedItems.add(event.item);
       }
 
+      final newTotal = _calculateTotal(updatedItems);
+      final newDiscount = _calculateDiscount(state.discountCode, newTotal);
+
       emit(state.copyWith(
         items: updatedItems,
-        totalAmount: _calculateTotal(updatedItems),
+        totalAmount: newTotal,
+        discountAmount: newDiscount,
         status: CartStatus.initial,
       ));
     });
 
     on<RemoveFromCart>((event, emit) {
       final updatedItems = state.items.where((i) => i.product.id != event.productId).toList();
+      final newTotal = _calculateTotal(updatedItems);
+      final newDiscount = _calculateDiscount(state.discountCode, newTotal);
+
       emit(state.copyWith(
         items: updatedItems,
-        totalAmount: _calculateTotal(updatedItems),
+        totalAmount: newTotal,
+        discountAmount: newDiscount,
         status: CartStatus.initial,
       ));
     });
@@ -46,20 +54,20 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           product: updatedItems[index].product,
           quantity: event.quantity,
         );
+        final newTotal = _calculateTotal(updatedItems);
+        final newDiscount = _calculateDiscount(state.discountCode, newTotal);
+
         emit(state.copyWith(
           items: updatedItems,
-          totalAmount: _calculateTotal(updatedItems),
+          totalAmount: newTotal,
+          discountAmount: newDiscount,
           status: CartStatus.initial,
         ));
       }
     });
 
     on<ApplyDiscountCode>((event, emit) {
-      // Mock discount logic
-      double discount = 0.0;
-      if (event.code == 'SAVE10') {
-        discount = state.totalAmount * 0.1;
-      }
+      final discount = _calculateDiscount(event.code, state.totalAmount);
       emit(state.copyWith(
         discountCode: event.code,
         discountAmount: discount,
@@ -92,5 +100,12 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
   double _calculateTotal(List<CartItem> items) {
     return items.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+  }
+
+  double _calculateDiscount(String? code, double total) {
+    if (code == 'SAVE10') return total * 0.1;
+    if (code == 'WELCOME20') return total * 0.2;
+    if (code == 'MEGA50') return total * 0.5;
+    return 0.0;
   }
 }
