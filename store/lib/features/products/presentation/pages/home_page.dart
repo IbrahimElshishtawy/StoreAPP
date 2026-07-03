@@ -70,7 +70,7 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           ListTile(
                             leading: const Icon(Icons.person_outline),
-                            title: const Text('Profile'),
+                            title: const Text('الملف الشخصي'),
                             onTap: () {
                               Navigator.pop(context);
                               // Handle Profile Page
@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
                           const Divider(thickness: 1.2),
                           ListTile(
                             leading: const Icon(Icons.cloud_upload_outlined, color: Colors.green),
-                            title: const Text('Upload Product'),
+                            title: const Text('رفع منتج'),
                             onTap: () {
                               Navigator.pop(context);
                               Navigator.pushNamed(context, '/upload');
@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           ListTile(
                             leading: const Icon(Icons.inventory_2_outlined, color: Colors.orange),
-                            title: const Text('My Products'),
+                            title: const Text('منتجاتي'),
                             onTap: () {
                               Navigator.pop(context);
                               Navigator.pushNamed(context, '/orders');
@@ -95,16 +95,24 @@ class _HomePageState extends State<HomePage> {
                           ),
                           ListTile(
                             leading: const Icon(Icons.history, color: Colors.indigo),
-                            title: const Text('Order History'),
+                            title: const Text('تاريخ الطلبات'),
                             onTap: () {
                               Navigator.pop(context);
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const OrderHistoryPage()));
                             },
                           ),
+                          ListTile(
+                            leading: const Icon(Icons.chat_outlined, color: Colors.blue),
+                            title: const Text('الدعم الفني'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.pushNamed(context, '/chat');
+                            },
+                          ),
                           const Divider(thickness: 1.2),
                           ListTile(
                             leading: const Icon(Icons.logout, color: Colors.red),
-                            title: const Text('Logout'),
+                            title: const Text('تسجيل الخروج'),
                             onTap: () {
                               Navigator.pop(context);
                               context.read<AuthBloc>().add(LogoutRequested());
@@ -122,7 +130,7 @@ class _HomePageState extends State<HomePage> {
               elevation: 0,
               centerTitle: true,
               title: const Text(
-                'New Trend',
+                'متجر العصر',
                 style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold),
               ),
               actions: [
@@ -160,9 +168,9 @@ class _HomePageState extends State<HomePage> {
               selectedItemColor: Colors.black,
               unselectedItemColor: Colors.grey,
               items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
-                BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
+                BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'السلة'),
+                BottomNavigationBarItem(icon: Icon(Icons.search), label: 'البحث'),
               ],
             ),
           );
