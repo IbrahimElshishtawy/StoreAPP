@@ -55,11 +55,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     });
 
     on<ApplyDiscountCode>((event, emit) {
-      // Mock discount logic
-      double discount = 0.0;
-      if (event.code == 'SAVE10') {
-        discount = state.totalAmount * 0.1;
-      }
+      final discount = _calculateDiscount(event.code, state.totalAmount);
       emit(state.copyWith(
         discountCode: event.code,
         discountAmount: discount,
@@ -92,5 +88,16 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
   double _calculateTotal(List<CartItem> items) {
     return items.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+  }
+
+  double _calculateDiscount(String code, double totalAmount) {
+    if (code == 'SAVE10') {
+      return totalAmount * 0.1;
+    } else if (code == 'WELCOME20') {
+      return totalAmount * 0.2;
+    } else if (code == 'MEGA50') {
+      return totalAmount * 0.5;
+    }
+    return 0.0;
   }
 }
