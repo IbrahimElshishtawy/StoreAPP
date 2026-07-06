@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:store/core/network/dio_client.dart';
 import 'package:store/core/network/payment_service.dart';
 import 'package:store/core/util/two_factor_auth_service.dart';
@@ -43,6 +44,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => Dio());
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
+  sl.registerLazySingleton(() => FirebaseStorage.instance);
   sl.registerLazySingleton(() => PaymentService());
 
   // Core
@@ -100,7 +102,10 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteProductUseCase(sl()));
   sl.registerLazySingleton(() => PromoteProductUseCase(sl()));
   sl.registerLazySingleton<SellerRepository>(() => SellerRepositoryImpl(sl()));
-  sl.registerLazySingleton<SellerRemoteDataSource>(() => SellerRemoteDataSourceImpl());
+  sl.registerLazySingleton<SellerRemoteDataSource>(() => SellerRemoteDataSourceImpl(
+    firestore: sl(),
+    storage: sl(),
+  ));
 
   // Features - Reviews
   sl.registerFactory(() => ReviewBloc(
