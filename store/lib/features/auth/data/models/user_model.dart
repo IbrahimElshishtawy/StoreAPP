@@ -8,6 +8,7 @@ class UserModel extends UserEntity {
     super.lastName,
     super.phoneNumber,
     super.imageUrl,
+    super.interests,
   });
 
   factory UserModel.fromFirestore(Map<String, dynamic> json, String id) {
@@ -18,6 +19,9 @@ class UserModel extends UserEntity {
       lastName: json['lastName'],
       phoneNumber: json['phoneNumber'],
       imageUrl: json['imageUrl'],
+      interests: json['interests'] != null
+          ? List<String>.from(json['interests'])
+          : const [],
     );
   }
 
@@ -28,6 +32,7 @@ class UserModel extends UserEntity {
       'lastName': lastName,
       'phoneNumber': phoneNumber,
       'imageUrl': imageUrl,
+      'interests': interests,
     };
   }
 }
