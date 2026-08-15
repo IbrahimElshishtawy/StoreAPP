@@ -101,13 +101,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                         builder: (_) => ProductVirtualView(
                           product: DummyProduct(
                             id: widget.product.id,
-                            name: widget.product.title,
+                            title: widget.product.title,
                             description: widget.product.description,
                             price: widget.product.price,
-                            imageUrl: widget.product.image,
+                            image: widget.product.image,
                             category: widget.product.category,
                             rating: widget.product.rating,
-                            arModelUrl: 'assets/models/product.glb',
                           ),
                         ),
                       ),
