@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:store/features/products/domain/entities/product_entity.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:store/features/seller/presentation/bloc/seller_bloc.dart';
 import 'package:store/features/seller/presentation/bloc/seller_event.dart';
 import 'package:store/features/seller/presentation/bloc/seller_state.dart';
@@ -97,8 +98,11 @@ class _UploadProductPageState extends State<UploadProductPage> {
     );
 
     context.read<SellerBloc>().add(
-          AddProductRequested(product, imageFile: useUrlInstead ? null : _selectedImage),
-        );
+      AddProductRequested(
+        product,
+        imageFile: useUrlInstead ? null : _selectedImage,
+      ),
+    );
   }
 
   Widget buildProductCard() {
@@ -265,68 +269,71 @@ class _UploadProductPageState extends State<UploadProductPage> {
           }
         },
         child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildProductCard(),
-            const SizedBox(height: 20),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  buildImagePicker(),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: "Product Name",
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildProductCard(),
+              const SizedBox(height: 20),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    buildImagePicker(),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: "Product Name",
+                      ),
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) =>
+                          value!.isEmpty ? 'Please enter product name' : null,
                     ),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter product name' : null,
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: const InputDecoration(labelText: "Description"),
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter description' : null,
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: priceController,
-                    decoration: const InputDecoration(labelText: "Price"),
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter price' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  context.watch<SellerBloc>().state is SellerLoading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                          onPressed: uploadProduct,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[800],
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                              horizontal: 40,
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: "Description",
+                      ),
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) =>
+                          value!.isEmpty ? 'Please enter description' : null,
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: priceController,
+                      decoration: const InputDecoration(labelText: "Price"),
+                      keyboardType: TextInputType.number,
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) =>
+                          value!.isEmpty ? 'Please enter price' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    context.watch<SellerBloc>().state is SellerLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                            onPressed: uploadProduct,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[800],
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                                horizontal: 40,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            child: const Text(
+                              "Upload Product",
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
-                          child: const Text(
-                            "Upload Product",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
