@@ -1,10 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import '../models/dummy_product.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class VirtualProductCard extends StatelessWidget {
-  final DummyProduct product;
+  final ProductEntity product;
   final VoidCallback onVrTap;
 
   const VirtualProductCard({

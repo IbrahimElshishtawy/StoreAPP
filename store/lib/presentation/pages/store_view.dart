@@ -80,31 +80,13 @@ class _StoreViewState extends State<StoreView> {
               (context, index) {
                 final product = products[index];
                 return VirtualProductCard(
-                  product: product is DummyProduct
-                      ? product
-                      : DummyProduct(
-                          id: product.id,
-                          title: product.title,
-                          description: product.description,
-                          price: product.price,
-                          image: product.image,
-                          category: product.category,
-                        ),
+                  product: product,
                   onVrTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ProductVirtualView(
-                          product: product is DummyProduct
-                              ? product
-                              : DummyProduct(
-                                  id: product.id,
-                                  title: product.title,
-                                  description: product.description,
-                                  price: product.price,
-                                  image: product.image,
-                                  category: product.category,
-                                ),
+                          product: product,
                         ),
                       ),
                     );
