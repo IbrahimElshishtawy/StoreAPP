@@ -8,6 +8,10 @@ class ProductEntity {
   final double rating;
   final int ratingCount;
   final bool isPromoted;
+  final bool hasVr;
+  final String? dealTag;
+  final double? originalPrice;
+  final String? arModelUrl;
 
   ProductEntity({
     required this.id,
@@ -19,6 +23,10 @@ class ProductEntity {
     this.rating = 0.0,
     this.ratingCount = 0,
     this.isPromoted = false,
+    this.hasVr = false,
+    this.dealTag,
+    this.originalPrice,
+    this.arModelUrl,
   });
 
   String get imageUrl => image;
