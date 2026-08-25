@@ -1,10 +1,6 @@
 import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class DummyProduct extends ProductEntity {
-  final bool hasVr;
-  final String? dealTag;
-  final double? originalPrice;
-
   DummyProduct({
     required super.id,
     required super.title,
@@ -12,9 +8,9 @@ class DummyProduct extends ProductEntity {
     required super.price,
     required super.image,
     required super.category,
-    this.hasVr = false,
-    this.dealTag,
-    this.originalPrice,
+    super.hasVr = false,
+    super.dealTag,
+    super.originalPrice,
   });
 
   @override
