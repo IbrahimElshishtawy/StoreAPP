@@ -1,10 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import '../models/dummy_product.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
 
 class ProductVirtualView extends StatefulWidget {
-  final DummyProduct product;
+  final ProductEntity product;
 
   const ProductVirtualView({super.key, required this.product});
 
@@ -92,7 +92,7 @@ class _ProductVirtualViewState extends State<ProductVirtualView>
                           fit: StackFit.expand,
                           children: [
                             Image.network(
-                              widget.product.imageUrl,
+                              widget.product.image,
                               fit: BoxFit.cover,
                             ),
                             // Glassmorphism overlay
