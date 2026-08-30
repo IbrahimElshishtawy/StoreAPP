@@ -7,7 +7,6 @@ import 'package:store/features/reviews/presentation/bloc/review_state.dart';
 import 'package:store/features/reviews/domain/entities/review.dart';
 import 'package:store/presentation/widgets/product_video_player.dart';
 import 'package:store/presentation/pages/product_virtual_view.dart';
-import 'package:store/presentation/models/dummy_product.dart';
 import 'package:store/features/cart/presentation/bloc/cart_bloc.dart';
 import 'package:store/features/cart/presentation/bloc/cart_event.dart';
 import 'package:store/features/cart/domain/entities/cart_item.dart';
@@ -98,18 +97,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ProductVirtualView(
-                          product: DummyProduct(
-                            id: widget.product.id,
-                            name: widget.product.title,
-                            description: widget.product.description,
-                            price: widget.product.price,
-                            imageUrl: widget.product.image,
-                            category: widget.product.category,
-                            rating: widget.product.rating,
-                            arModelUrl: 'assets/models/product.glb',
-                          ),
-                        ),
+                        builder: (_) => ProductVirtualView(product: widget.product),
                       ),
                     );
                   },
