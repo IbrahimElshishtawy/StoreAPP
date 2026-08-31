@@ -4,6 +4,7 @@ import 'package:store/core/util/responsive_layout.dart';
 import 'package:store/features/products/presentation/bloc/product_bloc.dart';
 import 'package:store/features/products/presentation/bloc/product_event.dart';
 import 'package:store/features/products/presentation/bloc/product_state.dart';
+import 'package:store/features/products/domain/entities/product_entity.dart';
 import 'package:store/presentation/widgets/common_ui.dart';
 import '../models/dummy_product.dart';
 import '../widgets/store_header.dart';
@@ -57,7 +58,7 @@ class _StoreViewState extends State<StoreView> {
     );
   }
 
-  Widget _buildContent(BuildContext context, int crossAxisCount, List products) {
+  Widget _buildContent(BuildContext context, int crossAxisCount, List<ProductEntity> products) {
     return CustomScrollView(
       slivers: [
         const SliverToBoxAdapter(
@@ -80,31 +81,13 @@ class _StoreViewState extends State<StoreView> {
               (context, index) {
                 final product = products[index];
                 return VirtualProductCard(
-                  product: product is DummyProduct
-                      ? product
-                      : DummyProduct(
-                          id: product.id,
-                          title: product.title,
-                          description: product.description,
-                          price: product.price,
-                          image: product.image,
-                          category: product.category,
-                        ),
+                  product: product,
                   onVrTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ProductVirtualView(
-                          product: product is DummyProduct
-                              ? product
-                              : DummyProduct(
-                                  id: product.id,
-                                  title: product.title,
-                                  description: product.description,
-                                  price: product.price,
-                                  image: product.image,
-                                  category: product.category,
-                                ),
+                          product: product,
                         ),
                       ),
                     );
